@@ -21,12 +21,12 @@ export const MarketChip = ({ data }: MarketChipProps) => {
           : "bg-loss-light border-loss/20 hover:border-loss/40"
       )}
     >
-      <span className="text-2xl">{data.emoji}</span>
-      <div className="flex flex-col flex-1 min-w-0">
-        <span className="text-sm font-medium text-foreground truncate">
+      <span className="text-2xl flex-shrink-0">{data.emoji}</span>
+      <div className="flex flex-col flex-1">
+        <span className="text-sm font-medium text-foreground">
           {data.name}
         </span>
-        <span className="text-xs font-semibold text-foreground">
+        <span className="text-xs font-semibold text-foreground whitespace-nowrap">
           ₹{data.price.toFixed(2)}/kg
         </span>
       </div>

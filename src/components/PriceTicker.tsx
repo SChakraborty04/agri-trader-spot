@@ -8,7 +8,7 @@ export const PriceTicker = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setOffset((prev) => (prev + 1) % 100);
-    }, 150);
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
