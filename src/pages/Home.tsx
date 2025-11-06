@@ -37,7 +37,7 @@ const Home = () => {
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Market Overview
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {marketChips.map((chip) => (
               <MarketChip key={chip.id} data={chip} />
             ))}
