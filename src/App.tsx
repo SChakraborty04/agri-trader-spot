@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Search from "./pages/Search";
 import CommodityDetail from "./pages/CommodityDetail";
 import QuoteTracking from "./pages/QuoteTracking";
+import QuoteHistory from "./pages/QuoteHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/search" element={<Search />} />
           <Route path="/commodity/:commodity" element={<CommodityDetail />} />
           <Route path="/quote-tracking" element={<QuoteTracking />} />
+          <Route path="/quote-history" element={<QuoteHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

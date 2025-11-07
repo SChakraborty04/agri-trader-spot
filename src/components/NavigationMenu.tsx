@@ -8,13 +8,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { QuoteHistory } from "./QuoteHistory";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Search, label: "Advanced Search", path: "/search" },
   { icon: TrendingUp, label: "Quote Tracking", path: "/quote-tracking" },
+  { icon: History, label: "Quote History", path: "/quote-history" },
 ];
 
 export const NavigationMenu = () => {
@@ -51,9 +51,6 @@ export const NavigationMenu = () => {
               </Button>
             );
           })}
-          <div className="pt-4 border-t border-border">
-            <QuoteHistory />
-          </div>
         </nav>
       </SheetContent>
     </Sheet>
