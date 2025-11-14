@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Quote } from "@/lib/mockData";
+import { Quote, Message } from "@/lib/mockData";
 
-// Mock history data
+// Mock history data with conversations
 const mockQuoteHistory: Quote[] = [
   {
     quoteNo: "QT12345678",
@@ -19,6 +19,36 @@ const mockQuoteHistory: Quote[] = [
     offerPrice: 11.50,
     location: "Mumbai",
     status: "Ordered",
+    messages: [
+      {
+        id: "1",
+        sender: "buyer",
+        senderName: "You",
+        message: "Hello, I would like to confirm the delivery schedule for this order.",
+        timestamp: "2025-10-15, 11:00 AM",
+      },
+      {
+        id: "2",
+        sender: "fpo",
+        senderName: "Sunrise Agro Collective",
+        message: "Hello! Thank you for your order. We can deliver within 2-3 business days. The tomatoes are fresh from our farm.",
+        timestamp: "2025-10-15, 11:30 AM",
+      },
+      {
+        id: "3",
+        sender: "buyer",
+        senderName: "You",
+        message: "That sounds great! Can you provide tracking information once shipped?",
+        timestamp: "2025-10-15, 12:00 PM",
+      },
+      {
+        id: "4",
+        sender: "fpo",
+        senderName: "Sunrise Agro Collective",
+        message: "Absolutely! We will send you tracking details via SMS and email once the shipment is dispatched.",
+        timestamp: "2025-10-15, 12:15 PM",
+      },
+    ],
   },
   {
     quoteNo: "QT87654321",
@@ -32,6 +62,29 @@ const mockQuoteHistory: Quote[] = [
     offerPrice: 18.00,
     location: "Pune",
     status: "Closed",
+    messages: [
+      {
+        id: "1",
+        sender: "buyer",
+        senderName: "You",
+        message: "Is this quote still available? I need 150kg of onions urgently.",
+        timestamp: "2025-10-20, 3:00 PM",
+      },
+      {
+        id: "2",
+        sender: "fpo",
+        senderName: "Green Valley Farmers",
+        message: "Yes, we have the stock available. We can deliver tomorrow if you confirm by 5 PM today.",
+        timestamp: "2025-10-20, 3:20 PM",
+      },
+      {
+        id: "3",
+        sender: "buyer",
+        senderName: "You",
+        message: "Perfect! I will confirm the payment shortly.",
+        timestamp: "2025-10-20, 3:30 PM",
+      },
+    ],
   },
   {
     quoteNo: "QT11223344",
@@ -45,6 +98,22 @@ const mockQuoteHistory: Quote[] = [
     offerPrice: 22.20,
     location: "Delhi",
     status: "Cancelled",
+    messages: [
+      {
+        id: "1",
+        sender: "buyer",
+        senderName: "You",
+        message: "I need to cancel this order due to change in requirements.",
+        timestamp: "2025-10-25, 2:00 PM",
+      },
+      {
+        id: "2",
+        sender: "fpo",
+        senderName: "Golden Harvest FPO",
+        message: "We understand. The order has been cancelled. No cancellation charges apply.",
+        timestamp: "2025-10-25, 2:30 PM",
+      },
+    ],
   },
   {
     quoteNo: "QT55667788",
@@ -58,6 +127,29 @@ const mockQuoteHistory: Quote[] = [
     offerPrice: 28.20,
     location: "Bangalore",
     status: "Rejected",
+    messages: [
+      {
+        id: "1",
+        sender: "buyer",
+        senderName: "You",
+        message: "Can you provide quality certificates for this batch?",
+        timestamp: "2025-11-01, 4:30 PM",
+      },
+      {
+        id: "2",
+        sender: "fpo",
+        senderName: "Delta Rice Producers",
+        message: "Unfortunately, we are unable to provide certificates for this particular batch. We apologize for the inconvenience.",
+        timestamp: "2025-11-01, 5:00 PM",
+      },
+      {
+        id: "3",
+        sender: "buyer",
+        senderName: "You",
+        message: "I see. I will need to look for another supplier then. Thank you for your transparency.",
+        timestamp: "2025-11-01, 5:15 PM",
+      },
+    ],
   },
 ];
 
@@ -132,9 +224,13 @@ const QuoteHistory = () => {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <p className="font-semibold text-lg text-foreground">
+                      <button
+                        onClick={() => navigate(`/quote/${quote.quoteNo}`)}
+                        className="font-semibold text-lg text-primary hover:underline flex items-center gap-2"
+                      >
                         {quote.quoteNo}
-                      </p>
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />

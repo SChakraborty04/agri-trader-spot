@@ -8,6 +8,7 @@ import Search from "./pages/Search";
 import CommodityDetail from "./pages/CommodityDetail";
 import QuoteTracking from "./pages/QuoteTracking";
 import QuoteHistory from "./pages/QuoteHistory";
+import QuoteDetail from "./pages/QuoteDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
