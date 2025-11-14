@@ -70,9 +70,12 @@ const QuoteTracking = () => {
                     {/* Quote Header */}
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-semibold text-foreground">
+                        <button
+                          onClick={() => navigate(`/quote/${quote.quoteNo}`)}
+                          className="font-semibold text-foreground hover:text-primary hover:underline transition-colors"
+                        >
                           {quote.quoteNo}
-                        </p>
+                        </button>
                         <p className="text-sm text-muted-foreground">
                           {quote.cropName}
                         </p>

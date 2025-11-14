@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Quote, Message } from "@/lib/mockData";
+import { Quote, Message, mockQuoteHistory } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
 
 const getStatusColor = (status: Quote["status"]) => {
@@ -31,8 +31,14 @@ const QuoteDetail = () => {
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
+    // Check localStorage first
     const storedQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const foundQuote = storedQuotes.find((q: Quote) => q.quoteNo === quoteNo);
+    let foundQuote = storedQuotes.find((q: Quote) => q.quoteNo === quoteNo);
+    
+    // If not in localStorage, check mock quote history
+    if (!foundQuote) {
+      foundQuote = mockQuoteHistory.find((q: Quote) => q.quoteNo === quoteNo);
+    }
     
     if (foundQuote) {
       setQuote(foundQuote);
