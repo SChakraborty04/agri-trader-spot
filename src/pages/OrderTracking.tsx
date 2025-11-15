@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { mockOrderHistory, Quote } from "@/lib/mockData";
+import OrderTrackingProgress from "@/components/OrderTrackingProgress";
+import { useState } from "react";
 
 const getStatusColor = (status: Quote["status"]) => {
   switch (status) {
@@ -50,6 +53,7 @@ const getStatusIcon = (status: Quote["status"]) => {
 const OrderTracking = () => {
   const navigate = useNavigate();
   const orders = mockOrderHistory;
+  const [selectedOrder, setSelectedOrder] = useState<Quote | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,16 +90,16 @@ const OrderTracking = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {orders.map((order) => (
-                <Card key={order.quoteNo} className="hover:shadow-lg transition-shadow">
+                <Card key={order.orderNo} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-4">
                     {/* Order Header */}
                     <div className="flex items-start justify-between">
                       <div>
                         <button
-                          onClick={() => navigate(`/quote/${order.quoteNo}`)}
+                          onClick={() => setSelectedOrder(order)}
                           className="font-semibold text-foreground hover:text-primary hover:underline transition-colors"
                         >
-                          {order.quoteNo}
+                          {order.orderNo}
                         </button>
                         <p className="text-sm text-muted-foreground">
                           {order.cropName}
@@ -161,9 +165,9 @@ const OrderTracking = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate(`/quote/${order.quoteNo}`)}
+                      onClick={() => setSelectedOrder(order)}
                     >
-                      View Details
+                      View Tracking
                     </Button>
                   </CardContent>
                 </Card>
@@ -172,6 +176,91 @@ const OrderTracking = () => {
           </div>
         )}
       </main>
+
+      {/* Order Tracking Dialog */}
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Tracking</DialogTitle>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">{selectedOrder.orderNo}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Quote: <button
+                        onClick={() => {
+                          setSelectedOrder(null);
+                          navigate(`/quote/${selectedOrder.quoteNo}`);
+                        }}
+                        className="text-primary hover:underline"
+                      >
+                        {selectedOrder.quoteNo}
+                      </button>
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(selectedOrder.status)}>
+                    <span className="flex items-center gap-1">
+                      {getStatusIcon(selectedOrder.status)}
+                      {selectedOrder.status}
+                    </span>
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Commodity</p>
+                    <p className="font-medium">{selectedOrder.cropName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">FPO</p>
+                    <p className="font-medium">{selectedOrder.fpoName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Quantity</p>
+                    <p className="font-medium">{selectedOrder.quantity} {selectedOrder.unit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Amount</p>
+                    <p className="font-medium text-primary">
+                      ₹{(selectedOrder.quantity * selectedOrder.price).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tracking Progress */}
+              <div className="border border-border rounded-lg p-4">
+                <OrderTrackingProgress status={selectedOrder.status} />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedOrder(null);
+                    navigate(`/quote/${selectedOrder.quoteNo}`);
+                  }}
+                >
+                  View Quote Details
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => setSelectedOrder(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

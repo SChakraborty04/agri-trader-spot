@@ -40,6 +40,7 @@ export interface Message {
 
 export interface Quote {
   quoteNo: string;
+  orderNo?: string;
   date: string;
   time: string;
   cropName: string;
@@ -541,6 +542,7 @@ export const mockQuoteHistory: Quote[] = [
 export const mockOrderHistory: Quote[] = [
   {
     quoteNo: "QT12345678",
+    orderNo: "ORD20251015001",
     date: "2025-10-15",
     time: "10:30 AM",
     cropName: "Tomato",
@@ -591,6 +593,7 @@ export const mockOrderHistory: Quote[] = [
   },
   {
     quoteNo: "QT99887766",
+    orderNo: "ORD20251105002",
     date: "2025-11-05",
     time: "9:00 AM",
     cropName: "Potato",
@@ -641,6 +644,7 @@ export const mockOrderHistory: Quote[] = [
   },
   {
     quoteNo: "QT44556677",
+    orderNo: "ORD20251108003",
     date: "2025-11-08",
     time: "3:30 PM",
     cropName: "Cauliflower",
@@ -670,20 +674,21 @@ export const mockOrderHistory: Quote[] = [
         id: "3",
         sender: "fpo",
         senderName: "Fresh Greens Cooperative",
-        message: "Payment confirmed. Starting packaging process.",
-        timestamp: "2025-11-09, 8:00 AM",
+        message: "Payment confirmed. Packaging your order now.",
+        timestamp: "2025-11-09, 9:00 AM",
       },
       {
         id: "4",
         sender: "fpo",
         senderName: "Fresh Greens Cooperative",
-        message: "Order is being loaded onto the vehicle now.",
-        timestamp: "2025-11-09, 2:00 PM",
+        message: "Order is being loaded for dispatch.",
+        timestamp: "2025-11-10, 10:00 AM",
       },
     ],
   },
   {
     quoteNo: "QT33445566",
+    orderNo: "ORD20251110004",
     date: "2025-11-10",
     time: "11:00 AM",
     cropName: "Banana",
@@ -720,6 +725,7 @@ export const mockOrderHistory: Quote[] = [
   },
   {
     quoteNo: "QT22334455",
+    orderNo: "ORD20251112005",
     date: "2025-11-12",
     time: "2:00 PM",
     cropName: "Chilli",
@@ -742,6 +748,7 @@ export const mockOrderHistory: Quote[] = [
   },
   {
     quoteNo: "QT11001100",
+    orderNo: "ORD20251113006",
     date: "2025-11-13",
     time: "10:00 AM",
     cropName: "Mango",
