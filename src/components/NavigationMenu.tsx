@@ -1,4 +1,4 @@
-import { Menu, Home, Search, History, TrendingUp } from "lucide-react";
+import { Menu, Home, Search, History, TrendingUp, Truck } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sheet,
@@ -14,6 +14,7 @@ const menuItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Search, label: "Advanced Search", path: "/search" },
   { icon: TrendingUp, label: "Quote Tracking", path: "/quote-tracking" },
+  { icon: Truck, label: "Order Tracking", path: "/order-tracking" },
   { icon: History, label: "Quote History", path: "/quote-history" },
 ];
 

@@ -12,6 +12,16 @@ const getStatusColor = (status: Quote["status"]) => {
       return "bg-blue-500/10 text-blue-500";
     case "Ordered":
       return "bg-green-500/10 text-green-500";
+    case "Accepted":
+      return "bg-blue-500/10 text-blue-500";
+    case "Packaging":
+      return "bg-purple-500/10 text-purple-500";
+    case "Loading":
+      return "bg-indigo-500/10 text-indigo-500";
+    case "Paid":
+      return "bg-green-500/10 text-green-500";
+    case "Shipped":
+      return "bg-cyan-500/10 text-cyan-500";
     case "Closed":
       return "bg-gray-500/10 text-gray-500";
     case "Cancelled":
