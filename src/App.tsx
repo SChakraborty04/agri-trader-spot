@@ -9,6 +9,7 @@ import CommodityDetail from "./pages/CommodityDetail";
 import QuoteTracking from "./pages/QuoteTracking";
 import QuoteHistory from "./pages/QuoteHistory";
 import QuoteDetail from "./pages/QuoteDetail";
+import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/commodity/:commodity" element={<CommodityDetail />} />
           <Route path="/quote-tracking" element={<QuoteTracking />} />
           <Route path="/quote-history" element={<QuoteHistory />} />
+          <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/quote/:quoteNo" element={<QuoteDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
