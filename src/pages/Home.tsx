@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { MarketChip } from "@/components/MarketChip";
 import { FPOCard } from "@/components/FPOCard";
@@ -7,15 +7,10 @@ import { Button } from "@/components/ui/button";
 import { fpoOffers } from "@/lib/mockData";
 import { useTicker } from "@/hooks/useTicker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Home = () => {
-  const { data: tickerData, isLoading, error } = useTicker(50);
-  const [page, setPage] = useState(0);
-  const itemsPerPage = 6;
-  
-  const totalPages = tickerData ? Math.ceil(tickerData.length / itemsPerPage) : 0;
-  const visibleData = tickerData?.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+  const navigate = useNavigate();
+  const { data: tickerData, isLoading, error } = useTicker(6);
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,29 +36,9 @@ const Home = () => {
             <h2 className="text-lg font-semibold text-foreground">
               Market Overview
             </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {tickerData ? `${page + 1}/${totalPages}` : ''}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={page === 0 || isLoading}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1 || isLoading}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="link" className="text-primary" onClick={() => navigate("/all-crops")}>
+              View All Crops
+            </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {isLoading ? (
@@ -73,7 +48,7 @@ const Home = () => {
             ) : error ? (
               <p className="text-destructive col-span-full">Failed to load market data</p>
             ) : (
-              visibleData?.map((chip) => (
+              tickerData?.map((chip) => (
                 <MarketChip key={chip.id} data={chip} />
               ))
             )}

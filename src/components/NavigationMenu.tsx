@@ -1,4 +1,4 @@
-import { Menu, Home, Search, History, TrendingUp, Truck } from "lucide-react";
+import { Menu, Home, Search, History, TrendingUp, Truck, Wheat } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sheet,
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: Home, label: "Home", path: "/" },
+  { icon: Wheat, label: "All Crops", path: "/all-crops" },
   { icon: Search, label: "Advanced Search", path: "/search" },
   { icon: TrendingUp, label: "Quote Tracking", path: "/quote-tracking" },
   { icon: Truck, label: "Order Tracking", path: "/order-tracking" },
