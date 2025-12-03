@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { marketChips } from "@/lib/mockData";
+import { useTicker } from "@/hooks/useTicker";
 import { cn } from "@/lib/utils";
 
 export const PriceTicker = () => {
   const [offset, setOffset] = useState(0);
+  const { data: tickerData } = useTicker(50);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -13,7 +14,11 @@ export const PriceTicker = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const tickerItems = [...marketChips, ...marketChips];
+  const tickerItems = tickerData ? [...tickerData, ...tickerData] : [];
+
+  if (!tickerData || tickerData.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative w-full overflow-hidden bg-card border-y border-border py-2">

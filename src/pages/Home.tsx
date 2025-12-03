@@ -3,9 +3,13 @@ import { MarketChip } from "@/components/MarketChip";
 import { FPOCard } from "@/components/FPOCard";
 import { PriceTicker } from "@/components/PriceTicker";
 import { Button } from "@/components/ui/button";
-import { marketChips, fpoOffers } from "@/lib/mockData";
+import { fpoOffers } from "@/lib/mockData";
+import { useTicker } from "@/hooks/useTicker";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Home = () => {
+  const { data: tickerData, isLoading, error } = useTicker(20);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -30,9 +34,17 @@ const Home = () => {
             Market Overview
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {marketChips.map((chip) => (
-              <MarketChip key={chip.id} data={chip} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 rounded-lg" />
+              ))
+            ) : error ? (
+              <p className="text-destructive col-span-full">Failed to load market data</p>
+            ) : (
+              tickerData?.map((chip) => (
+                <MarketChip key={chip.id} data={chip} />
+              ))
+            )}
           </div>
         </section>
 
