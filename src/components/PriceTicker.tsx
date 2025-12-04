@@ -31,7 +31,7 @@ export const PriceTicker = () => {
       >
         {tickerItems.map((item, index) => (
           <div key={`${item.id}-${index}`} className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">{item.name}</span>
+            <span className="font-semibold text-foreground">{item.commodity} - {item.variety}</span>
             <span className="text-muted-foreground">₹{item.price.toFixed(2)}</span>
             <span
               className={cn(

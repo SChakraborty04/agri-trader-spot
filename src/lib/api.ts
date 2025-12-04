@@ -2,7 +2,8 @@ const API_BASE_URL = "https://v-box-backend.vercel.app";
 
 export interface MarketChipAPI {
   id: string;
-  name: string;
+  commodity: string;
+  variety: string;
   emoji: string;
   price: number;
   change: number;

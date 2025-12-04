@@ -1,6 +1,7 @@
 export interface MarketChip {
   id: string;
-  name: string;
+  commodity: string;
+  variety: string;
   emoji: string;
   price: number;
   change: number;
