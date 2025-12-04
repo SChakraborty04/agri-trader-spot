@@ -56,18 +56,18 @@ export interface Quote {
 }
 
 export const marketChips: MarketChip[] = [
-  { id: "1", name: "Tomato", emoji: "🍅", price: 11.75, change: 0.5, changePercent: 4.44 },
-  { id: "2", name: "Onion", emoji: "🧅", price: 18.20, change: -0.8, changePercent: -4.21 },
-  { id: "3", name: "Potato", emoji: "🥔", price: 14.50, change: 1.2, changePercent: 9.02 },
-  { id: "4", name: "Wheat", emoji: "🌾", price: 22.30, change: 0.3, changePercent: 1.36 },
-  { id: "5", name: "Rice", emoji: "🍚", price: 28.40, change: -0.5, changePercent: -1.73 },
-  { id: "6", name: "Cotton", emoji: "🌱", price: 65.80, change: 2.1, changePercent: 3.29 },
-  { id: "7", name: "Sugarcane", emoji: "🎋", price: 3.50, change: 0.2, changePercent: 6.06 },
-  { id: "8", name: "Mango", emoji: "🥭", price: 45.60, change: -1.5, changePercent: -3.18 },
-  { id: "9", name: "Banana", emoji: "🍌", price: 24.80, change: 0.9, changePercent: 3.77 },
-  { id: "10", name: "Cabbage", emoji: "🥬", price: 8.90, change: -0.3, changePercent: -3.26 },
-  { id: "11", name: "Cauliflower", emoji: "🥦", price: 16.20, change: 1.1, changePercent: 7.28 },
-  { id: "12", name: "Chilli", emoji: "🌶️", price: 85.40, change: 3.2, changePercent: 3.89 },
+  // { id: "1", name: "Tomato", emoji: "🍅", price: 11.75, change: 0.5, changePercent: 4.44 },
+  // { id: "2", name: "Onion", emoji: "🧅", price: 18.20, change: -0.8, changePercent: -4.21 },
+  // { id: "3", name: "Potato", emoji: "🥔", price: 14.50, change: 1.2, changePercent: 9.02 },
+  // { id: "4", name: "Wheat", emoji: "🌾", price: 22.30, change: 0.3, changePercent: 1.36 },
+  // { id: "5", name: "Rice", emoji: "🍚", price: 28.40, change: -0.5, changePercent: -1.73 },
+  // { id: "6", name: "Cotton", emoji: "🌱", price: 65.80, change: 2.1, changePercent: 3.29 },
+  // { id: "7", name: "Sugarcane", emoji: "🎋", price: 3.50, change: 0.2, changePercent: 6.06 },
+  // { id: "8", name: "Mango", emoji: "🥭", price: 45.60, change: -1.5, changePercent: -3.18 },
+  // { id: "9", name: "Banana", emoji: "🍌", price: 24.80, change: 0.9, changePercent: 3.77 },
+  // { id: "10", name: "Cabbage", emoji: "🥬", price: 8.90, change: -0.3, changePercent: -3.26 },
+  // { id: "11", name: "Cauliflower", emoji: "🥦", price: 16.20, change: 1.1, changePercent: 7.28 },
+  // { id: "12", name: "Chilli", emoji: "🌶️", price: 85.40, change: 3.2, changePercent: 3.89 },
 ];
 
 export const fpoOffers: FPOOffer[] = [

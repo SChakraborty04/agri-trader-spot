@@ -13,7 +13,7 @@ export const MarketChip = ({ data }: MarketChipProps) => {
 
   return (
     <div
-      onClick={() => navigate(`/commodity/${data.name}`)}
+      onClick={() => navigate(`/commodity/${data.commodity}`)}
       className={cn(
         "flex items-center gap-3 px-6 py-4 rounded-lg border transition-all duration-300 cursor-pointer",
         isPositive 
@@ -24,7 +24,7 @@ export const MarketChip = ({ data }: MarketChipProps) => {
       <span className="text-3xl flex-shrink-0">{data.emoji}</span>
       <div className="flex flex-col flex-1">
         <span className="text-base font-medium text-foreground">
-          {data.name}
+          {data.commodity} - {data.variety}
         </span>
         <span className="text-sm font-semibold text-foreground whitespace-nowrap">
           ₹{data.price.toFixed(2)}/kg
