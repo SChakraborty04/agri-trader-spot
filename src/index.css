@@ -212,85 +212,6 @@
     to { opacity: 1; }
   }
 
-  /* Haptic feedback styles */
-  .haptic {
-    @apply transition-transform duration-150 ease-apple;
-  }
-  
-  .haptic:active {
-    transform: scale(0.96);
-  }
-
-  .haptic-light:active {
-    transform: scale(0.98);
-  }
-
-  .haptic-strong:active {
-    transform: scale(0.94);
-  }
-
-  /* Lift effect on hover */
-  .lift {
-    @apply transition-all duration-200 ease-apple;
-  }
-  
-  .lift:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  /* Glow effect */
-  .glow {
-    @apply transition-shadow duration-300;
-  }
-  
-  .glow:hover {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
-  }
-
-  /* Pulse indicator */
-  .pulse-dot {
-    @apply relative;
-  }
-  
-  .pulse-dot::after {
-    content: '';
-    @apply absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full;
-    animation: pulse-ring 1.5s ease-out infinite;
-  }
-
-  @keyframes pulse-ring {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.5);
-      opacity: 0.5;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  /* Shimmer loading effect */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--secondary)) 0%,
-      hsl(var(--muted)) 50%,
-      hsl(var(--secondary)) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
   /* Smooth scroll */
   .scroll-smooth {
     scroll-behavior: smooth;
@@ -304,24 +225,5 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-
-  /* Touch ripple effect */
-  .ripple {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .ripple::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), hsl(var(--foreground) / 0.1) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .ripple:active::after {
-    opacity: 1;
   }
 }
