@@ -50,3 +50,11 @@ export async function fetchFPOOffers(commodity: string, variety: string): Promis
       offer.variety.toLowerCase() === variety.toLowerCase()
   );
 }
+
+export async function fetchAllFPOOffers(): Promise<FPOOfferAPI[]> {
+  const response = await fetch(`${API_BASE_URL}/vboxtrade/fpo-offers`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch FPO offers");
+  }
+  return response.json();
+}

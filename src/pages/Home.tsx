@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { MarketChip } from "@/components/MarketChip";
-import { FPOCard } from "@/components/FPOCard";
 import { PriceTicker } from "@/components/PriceTicker";
 import { Button } from "@/components/ui/button";
-import { fpoOffers } from "@/lib/mockData";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useTicker } from "@/hooks/useTicker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Package } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAllFPOOffers } from "@/lib/api";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -16,6 +18,11 @@ const Home = () => {
   const [page, setPage] = useState(0);
   const itemsPerPage = 6;
   
+  const { data: fpoOffers = [], isLoading: fpoLoading } = useQuery({
+    queryKey: ['all-fpo-offers'],
+    queryFn: fetchAllFPOOffers,
+  });
+
   const totalPages = tickerData ? Math.ceil(tickerData.length / itemsPerPage) : 0;
   const visibleData = tickerData?.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
@@ -91,14 +98,81 @@ const Home = () => {
             <h2 className="text-lg font-semibold text-foreground">
               Latest FPO Offers
             </h2>
-            <Button variant="link" className="text-primary">
-              View All
-            </Button>
+            <span className="text-sm text-muted-foreground">
+              {fpoOffers.length} offers
+            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {fpoOffers.map((offer) => (
-              <FPOCard key={offer.id} offer={offer} />
-            ))}
+            {fpoLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 rounded-lg" />
+              ))
+            ) : (
+              fpoOffers.slice(0, 12).map((offer) => {
+                const addressParts = offer.address.split(", ");
+                const state = addressParts[addressParts.length - 1] || "";
+                const district = addressParts[addressParts.length - 2] || "";
+                const slug = `${offer.commodity.toLowerCase().replace(/\s+/g, '')}-${offer.variety.toLowerCase().replace(/\s+/g, '')}`;
+
+                return (
+                  <Card 
+                    key={offer.id} 
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/${slug}`)}
+                  >
+                    <CardContent className="p-4 space-y-3">
+                      {/* Header with Badge */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-2">
+                          <span className="text-xl">🏢</span>
+                          <div>
+                            <h3 className="font-semibold text-foreground text-sm">
+                              {offer.fpoName}
+                            </h3>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="w-3 h-3" />
+                              <span>{district}, {state}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400 text-xs">
+                          {offer.fpoType}
+                        </Badge>
+                      </div>
+
+                      {/* Commodity Info */}
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Commodity</span>
+                          <span className="font-medium">{offer.commodity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Variety</span>
+                          <span className="font-medium">{offer.variety}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Grade</span>
+                          <Badge variant="destructive" className="bg-red-500 text-xs">
+                            {offer.grade}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="pt-2 border-t border-border flex items-center justify-between">
+                        <span className="text-lg font-bold text-primary">
+                          ₹{offer.price}/{offer.unit}
+                        </span>
+                        <Button size="sm" variant="outline">
+                          <Package className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
         </section>
       </main>
