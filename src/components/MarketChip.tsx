@@ -11,43 +11,50 @@ export const MarketChip = ({ data }: MarketChipProps) => {
   const isPositive = data.change >= 0;
   const navigate = useNavigate();
 
-  // Create slug: "tomato-pusaruby" from "Tomato" and "Pusa Ruby"
   const slug = `${data.commodity.toLowerCase().replace(/\s+/g, '')}-${data.variety.toLowerCase().replace(/\s+/g, '')}`;
 
   return (
     <div
       onClick={() => navigate(`/${slug}`)}
       className={cn(
-        "flex items-center gap-3 px-6 py-4 rounded-lg border transition-all duration-300 cursor-pointer",
-        isPositive 
-          ? "bg-gain-light border-gain/20 hover:border-gain/40" 
-          : "bg-loss-light border-loss/20 hover:border-loss/40"
+        "apple-card p-4 cursor-pointer press-effect group",
+        "hover:shadow-apple-lg"
       )}
     >
-      <span className="text-3xl flex-shrink-0">{data.emoji}</span>
-      <div className="flex flex-col flex-1">
-        <span className="text-base font-medium text-foreground">
-          {data.commodity} - {data.variety}
-        </span>
-        <span className="text-sm font-semibold text-foreground whitespace-nowrap">
-          ₹{data.price.toFixed(2)}/kg
-        </span>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
+          {data.emoji}
+        </div>
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">
+            {data.commodity}
+          </span>
+          <span className="text-xs text-muted-foreground truncate">
+            {data.variety}
+          </span>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {isPositive ? (
-          <TrendingUp className="w-5 h-5 text-gain" />
-        ) : (
-          <TrendingDown className="w-5 h-5 text-loss" />
-        )}
-        <span
-          className={cn(
-            "text-sm font-bold",
-            isPositive ? "text-gain" : "text-loss"
-          )}
-        >
-          {isPositive ? "+" : ""}
-          {data.changePercent.toFixed(2)}%
+      
+      <div className="mt-3 flex items-end justify-between">
+        <span className="text-lg font-bold text-foreground">
+          ₹{data.price.toFixed(2)}
+          <span className="text-xs font-normal text-muted-foreground">/kg</span>
         </span>
+        <div className={cn(
+          "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold",
+          isPositive 
+            ? "bg-gain/10 text-gain" 
+            : "bg-loss/10 text-loss"
+        )}>
+          {isPositive ? (
+            <TrendingUp className="w-3 h-3" />
+          ) : (
+            <TrendingDown className="w-3 h-3" />
+          )}
+          <span>
+            {isPositive ? "+" : ""}{data.changePercent.toFixed(2)}%
+          </span>
+        </div>
       </div>
     </div>
   );

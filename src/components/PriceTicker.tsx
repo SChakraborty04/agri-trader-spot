@@ -21,9 +21,9 @@ export const PriceTicker = () => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden bg-card border-y border-border py-2">
+    <div className="relative w-full overflow-hidden vibrancy border-b border-border/50 py-2.5">
       <div
-        className="flex gap-6 whitespace-nowrap"
+        className="flex gap-8 whitespace-nowrap"
         style={{
           transform: `translateX(-${offset}%)`,
           transition: "transform 0.05s linear",
@@ -31,12 +31,14 @@ export const PriceTicker = () => {
       >
         {tickerItems.map((item, index) => (
           <div key={`${item.id}-${index}`} className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">{item.commodity} - {item.variety}</span>
-            <span className="text-muted-foreground">₹{item.price.toFixed(2)}</span>
+            <span className="text-sm font-medium text-foreground">{item.commodity}</span>
+            <span className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</span>
             <span
               className={cn(
-                "font-semibold",
-                item.change >= 0 ? "text-gain" : "text-loss"
+                "text-xs font-semibold px-1.5 py-0.5 rounded-md",
+                item.change >= 0 
+                  ? "bg-gain/10 text-gain" 
+                  : "bg-loss/10 text-loss"
               )}
             >
               {item.change >= 0 ? "+" : ""}

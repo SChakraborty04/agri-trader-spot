@@ -4,7 +4,6 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTicker } from "@/hooks/useTicker";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,14 +111,16 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+      {/* Header - Apple vibrancy style */}
+      <header className="sticky top-0 z-50 vibrancy border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-center">
-            <div className="absolute left-4">
+          <div className="flex items-center justify-center relative">
+            <div className="absolute left-0">
               <NavigationMenu />
             </div>
-            <h1 className="text-2xl font-bold text-primary">VBOX Trading</h1>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              VBOX Trading
+            </h1>
           </div>
         </div>
       </header>
@@ -127,192 +128,224 @@ const Home = () => {
       {/* Price Ticker */}
       <PriceTicker />
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Market Overview */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Market Overview
-            </h2>
-            <div className="flex items-center gap-2">
-              <Button variant="link" className="text-primary px-0" onClick={() => navigate("/all-crops")}>
+        <section className="animate-fade-in">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground tracking-tight">
+                Market Overview
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Live commodity prices
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                className="text-primary font-medium hover:bg-primary/10 rounded-xl"
+                onClick={() => navigate("/all-crops")}
+              >
                 View All
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {tickerData ? `${page + 1}/${totalPages}` : ''}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={page === 0 || isLoading}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1 || isLoading}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 bg-secondary rounded-xl p-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground px-2 min-w-[40px] text-center">
+                  {tickerData ? `${page + 1}/${totalPages}` : '-'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1 || isLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 rounded-lg" />
+                <Skeleton key={i} className="h-28 rounded-2xl" />
               ))
             ) : error ? (
-              <p className="text-destructive col-span-full">Failed to load market data</p>
+              <div className="col-span-full text-center py-12">
+                <p className="text-destructive">Failed to load market data</p>
+              </div>
             ) : (
-              visibleData?.map((chip) => (
-                <MarketChip key={chip.id} data={chip} />
+              visibleData?.map((chip, i) => (
+                <div key={chip.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+                  <MarketChip data={chip} />
+                </div>
               ))
             )}
           </div>
         </section>
 
         {/* FPO Offers */}
-        <section>
-          <div className="flex flex-col gap-4 mb-4">
+        <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <div className="flex flex-col gap-5 mb-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">
-                Latest FPO Offers
-              </h2>
-              <Button variant="link" className="text-primary px-0" onClick={() => navigate("/all-fpos")}>
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground tracking-tight">
+                  FPO Offers
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {filteredAndSortedFPOs.length} available offers
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="text-primary font-medium hover:bg-primary/10 rounded-xl"
+                onClick={() => navigate("/all-fpos")}
+              >
                 View All
               </Button>
             </div>
 
-            {/* Search and Sort Controls */}
+            {/* Search and Sort Controls - Apple style */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search FPO, commodity, location..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-9"
+                  className="pl-11 h-12 rounded-xl bg-secondary border-0 focus-visible:ring-2 focus-visible:ring-primary/20"
                 />
               </div>
               <Select value={sortBy} onValueChange={(v) => handleSortChange(v as SortOption)}>
-                <SelectTrigger className="w-full sm:w-44">
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-full sm:w-48 h-12 rounded-xl bg-secondary border-0">
+                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                  <SelectItem value="commodity">Commodity A-Z</SelectItem>
-                  <SelectItem value="location">Location A-Z</SelectItem>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="price-asc" className="rounded-lg">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc" className="rounded-lg">Price: High to Low</SelectItem>
+                  <SelectItem value="commodity" className="rounded-lg">Commodity A-Z</SelectItem>
+                  <SelectItem value="location" className="rounded-lg">Location A-Z</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-end gap-2">
-              <span className="text-sm text-muted-foreground">
-                {filteredAndSortedFPOs.length} offers • {fpoTotalPages > 0 ? `${fpoPage + 1}/${fpoTotalPages}` : '0/0'}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setFpoPage(p => Math.max(0, p - 1))}
-                disabled={fpoPage === 0 || fpoLoading}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setFpoPage(p => Math.min(fpoTotalPages - 1, p + 1))}
-                disabled={fpoPage >= fpoTotalPages - 1 || fpoLoading}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 bg-secondary rounded-xl p-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  onClick={() => setFpoPage(p => Math.max(0, p - 1))}
+                  disabled={fpoPage === 0 || fpoLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground px-2 min-w-[40px] text-center">
+                  {fpoTotalPages > 0 ? `${fpoPage + 1}/${fpoTotalPages}` : '-'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  onClick={() => setFpoPage(p => Math.min(fpoTotalPages - 1, p + 1))}
+                  disabled={fpoPage >= fpoTotalPages - 1 || fpoLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {fpoLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-lg" />
+                <Skeleton key={i} className="h-64 rounded-2xl" />
               ))
             ) : visibleFPOs.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                No offers found matching your search.
+              <div className="col-span-full text-center py-16">
+                <p className="text-muted-foreground">No offers found matching your search.</p>
               </div>
             ) : (
-              visibleFPOs.map((offer) => {
+              visibleFPOs.map((offer, i) => {
                 const addressParts = offer.address.split(", ");
                 const state = addressParts[addressParts.length - 1] || "";
                 const district = addressParts[addressParts.length - 2] || "";
                 const slug = `${offer.commodity.toLowerCase().replace(/\s+/g, '')}-${offer.variety.toLowerCase().replace(/\s+/g, '')}`;
 
                 return (
-                  <Card 
+                  <div 
                     key={offer.id} 
-                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    className="apple-card p-5 cursor-pointer press-effect animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms` }}
                     onClick={() => navigate(`/${slug}`)}
                   >
-                    <CardContent className="p-4 space-y-3">
-                      {/* Header with Badge */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-2">
-                          <span className="text-xl">🏢</span>
-                          <div>
-                            <h3 className="font-semibold text-foreground text-sm">
-                              {offer.fpoName}
-                            </h3>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <MapPin className="w-3 h-3" />
-                              <span>{district}, {state}</span>
-                            </div>
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-xl">
+                          🏢
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground text-sm leading-tight">
+                            {offer.fpoName}
+                          </h3>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                            <MapPin className="w-3 h-3" />
+                            <span>{district}, {state}</span>
                           </div>
                         </div>
-                        <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400 text-xs">
-                          {offer.fpoType}
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px] font-medium rounded-md">
+                        {offer.fpoType}
+                      </Badge>
+                    </div>
+
+                    {/* Commodity Info */}
+                    <div className="space-y-2 text-sm mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Commodity</span>
+                        <span className="font-medium text-foreground">{offer.commodity}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Variety</span>
+                        <span className="font-medium text-foreground">{offer.variety}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Grade</span>
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-[10px] font-medium rounded-md">
+                          {offer.grade}
                         </Badge>
                       </div>
+                    </div>
 
-                      {/* Commodity Info */}
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Commodity</span>
-                          <span className="font-medium">{offer.commodity}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Variety</span>
-                          <span className="font-medium">{offer.variety}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Grade</span>
-                          <Badge variant="destructive" className="bg-red-500 text-xs">
-                            {offer.grade}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Price */}
-                      <div className="pt-2 border-t border-border flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary">
-                          ₹{offer.price}/{offer.unit}
+                    {/* Price & Action */}
+                    <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+                      <div>
+                        <span className="text-xl font-bold text-foreground">
+                          ₹{offer.price}
                         </span>
-                        <Button 
-                          size="sm"
-                          onClick={(e) => handleGenerateQuote(offer, e)}
-                        >
-                          <FileText className="w-3 h-3 mr-1" />
-                          Generate Quote
-                        </Button>
+                        <span className="text-sm text-muted-foreground">/{offer.unit}</span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <Button 
+                        size="sm"
+                        className="rounded-xl h-9 px-4 bg-primary hover:bg-primary/90 press-effect"
+                        onClick={(e) => handleGenerateQuote(offer, e)}
+                      >
+                        <FileText className="w-3.5 h-3.5 mr-1.5" />
+                        Quote
+                      </Button>
+                    </div>
+                  </div>
                 );
               })
             )}
