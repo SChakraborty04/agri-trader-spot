@@ -11,27 +11,22 @@ export interface MarketChipAPI {
 }
 
 export interface FPOOfferAPI {
-  seller_details: {
-    fpo_name: string;
-    registration_type: string;
-    registration_no: string;
-    district: string;
-    state: string;
-    address: string;
-    pincode: string;
-  };
-  commodity: {
-    commodity_name: string;
-  };
-  commodity_varieties: {
-    variety_name: string;
-    grade: string;
-  };
-  seller_prices: {
-    base_price: number;
-    max_order_quantity: number;
-    avl_from: string;
-  };
+  id: string;
+  fpoName: string;
+  fpoLogo: string;
+  fpoType: string;
+  address: string;
+  pincode: string;
+  commodity: string;
+  price: number;
+  quantity: number;
+  unit: string;
+  variety: string;
+  minOrderQty: number;
+  maxOrderQty: number;
+  availableFrom: string;
+  verified: boolean;
+  grade: string;
 }
 
 export async function fetchTicker(limit: number = 50): Promise<MarketChipAPI[]> {
@@ -47,5 +42,11 @@ export async function fetchFPOOffers(commodity: string, variety: string): Promis
   if (!response.ok) {
     throw new Error("Failed to fetch FPO offers");
   }
-  return response.json();
+  const data: FPOOfferAPI[] = await response.json();
+  // Filter by commodity and variety client-side as API may return all
+  return data.filter(
+    (offer) => 
+      offer.commodity.toLowerCase() === commodity.toLowerCase() && 
+      offer.variety.toLowerCase() === variety.toLowerCase()
+  );
 }

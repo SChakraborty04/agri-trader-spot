@@ -26,14 +26,13 @@ const CommodityDetail = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
   const [showFilters, setShowFilters] = useState(true);
   const [selectedOffer, setSelectedOffer] = useState<FPOOffer | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [quoteNumbers, setQuoteNumbers] = useState<Record<string, string>>({});
   const { data: tickerData = [], isLoading: tickerLoading } = useTicker(100);
 
-  // Parse slug to get commodity and variety
   // Find matching ticker item by comparing slugified versions
   const commodityData = tickerData.find((chip) => {
     const chipSlug = `${chip.commodity.toLowerCase().replace(/\s+/g, '')}-${chip.variety.toLowerCase().replace(/\s+/g, '')}`;
@@ -50,45 +49,52 @@ const CommodityDetail = () => {
   const filteredFPOs = fpoOffers.filter((offer) => {
     const matchesSearch =
       searchQuery === "" ||
-      offer.seller_details.fpo_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      offer.seller_details.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      offer.seller_details.state.toLowerCase().includes(searchQuery.toLowerCase());
+      offer.fpoName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      offer.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesLocation = location === "all" || 
-      `${offer.seller_details.district}, ${offer.seller_details.state}` === location;
-    const matchesPrice = offer.seller_prices.base_price >= priceRange[0] && 
-      offer.seller_prices.base_price <= priceRange[1];
+    const matchesLocation = location === "all" || offer.address.includes(location);
+    const matchesPrice = offer.price >= priceRange[0] && offer.price <= priceRange[1];
 
     return matchesSearch && matchesLocation && matchesPrice;
   });
 
-  const locations = ["all", ...new Set(fpoOffers.map((o) => `${o.seller_details.district}, ${o.seller_details.state}`))];
+  // Extract unique locations from addresses (state part)
+  const locations = ["all", ...new Set(fpoOffers.map((o) => {
+    const parts = o.address.split(", ");
+    return parts[parts.length - 1]; // Get state
+  }))];
 
   const handleQuoteGenerated = (quoteNo: string, offerId: string) => {
     setQuoteNumbers(prev => ({ ...prev, [offerId]: quoteNo }));
   };
 
   // Convert API offer to legacy format for QuoteFormDialog
-  const convertToLegacyOffer = (offer: FPOOfferAPI): FPOOffer => ({
-    id: `${offer.seller_details.registration_no}-${offer.commodity_varieties.variety_name}`,
-    fpoName: offer.seller_details.fpo_name,
-    fpoLogo: "🏢",
-    location: `${offer.seller_details.district}, ${offer.seller_details.state}`,
-    commodity: offer.commodity.commodity_name,
-    variety: offer.commodity_varieties.variety_name,
-    quality: offer.commodity_varieties.grade,
-    price: offer.seller_prices.base_price,
-    unit: "kg",
-    quantity: offer.seller_prices.max_order_quantity,
-    availableFrom: offer.seller_prices.avl_from,
-    minOrderQty: 1,
-    verified: true,
-    pincode: offer.seller_details.pincode,
-    block: offer.seller_details.address,
-    district: offer.seller_details.district,
-    state: offer.seller_details.state,
-    distance: "N/A",
-  });
+  const convertToLegacyOffer = (offer: FPOOfferAPI): FPOOffer => {
+    const addressParts = offer.address.split(", ");
+    const state = addressParts[addressParts.length - 1] || "";
+    const district = addressParts[addressParts.length - 2] || "";
+    
+    return {
+      id: offer.id,
+      fpoName: offer.fpoName,
+      fpoLogo: offer.fpoLogo || "🏢",
+      location: offer.address,
+      commodity: offer.commodity,
+      variety: offer.variety,
+      quality: offer.grade,
+      price: offer.price,
+      unit: offer.unit,
+      quantity: offer.quantity,
+      availableFrom: offer.availableFrom,
+      minOrderQty: offer.minOrderQty,
+      verified: offer.verified,
+      pincode: offer.pincode,
+      block: addressParts[0] || "",
+      district: district,
+      state: state,
+      distance: "N/A",
+    };
+  };
 
   if (tickerLoading) {
     return (
@@ -176,7 +182,7 @@ const CommodityDetail = () => {
 
                 {/* Location Filter */}
                 <div className="space-y-2">
-                  <Label>Location</Label>
+                  <Label>State</Label>
                   <Select value={location} onValueChange={setLocation}>
                     <SelectTrigger>
                       <SelectValue />
@@ -184,7 +190,7 @@ const CommodityDetail = () => {
                     <SelectContent>
                       {locations.map((l) => (
                         <SelectItem key={l} value={l}>
-                          {l === "all" ? "All Locations" : l}
+                          {l === "all" ? "All States" : l}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -194,14 +200,14 @@ const CommodityDetail = () => {
                 {/* Price Range Filter */}
                 <div className="space-y-2">
                   <Label>
-                    Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}/kg
+                    Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}/{fpoOffers[0]?.unit || "kg"}
                   </Label>
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
                     min={0}
-                    max={500}
-                    step={10}
+                    max={10000}
+                    step={100}
                     className="mt-2"
                   />
                 </div>
@@ -211,7 +217,7 @@ const CommodityDetail = () => {
                   className="w-full"
                   onClick={() => {
                     setLocation("all");
-                    setPriceRange([0, 500]);
+                    setPriceRange([0, 10000]);
                     setSearchQuery("");
                   }}
                 >
@@ -251,15 +257,18 @@ const CommodityDetail = () => {
                   Found {filteredFPOs.length} offer{filteredFPOs.length !== 1 ? "s" : ""}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredFPOs.map((offer, index) => {
-                    const offerId = `${offer.seller_details.registration_no}-${index}`;
+                  {filteredFPOs.map((offer) => {
+                    const addressParts = offer.address.split(", ");
+                    const state = addressParts[addressParts.length - 1] || "";
+                    const district = addressParts[addressParts.length - 2] || "";
+                    
                     return (
-                      <Card key={offerId} className="hover:shadow-lg transition-shadow">
+                      <Card key={offer.id} className="hover:shadow-lg transition-shadow">
                         <CardContent className="p-6 space-y-4">
                           {/* Registration Type Badge */}
                           <div className="flex justify-end">
                             <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-400">
-                              {offer.seller_details.registration_type}
+                              {offer.fpoType}
                             </Badge>
                           </div>
 
@@ -268,13 +277,11 @@ const CommodityDetail = () => {
                             <span className="text-2xl">🏢</span>
                             <div>
                               <h3 className="font-semibold text-foreground underline">
-                                {offer.seller_details.fpo_name}
+                                {offer.fpoName}
                               </h3>
                               <div className="flex items-start gap-1 text-sm text-muted-foreground mt-1">
                                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                <span>
-                                  {offer.seller_details.district} - {offer.seller_details.state}
-                                </span>
+                                <span>{district} - {state}</span>
                               </div>
                             </div>
                           </div>
@@ -283,27 +290,27 @@ const CommodityDetail = () => {
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="font-semibold">Commodity</span>
-                              <span>{offer.commodity.commodity_name} - {offer.commodity_varieties.variety_name}</span>
+                              <span>{offer.commodity} - {offer.variety}</span>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="font-semibold">Grade</span>
                               <Badge variant="destructive" className="bg-red-500">
-                                {offer.commodity_varieties.grade}
+                                {offer.grade}
                               </Badge>
                             </div>
                             <div className="flex justify-between">
                               <span className="font-semibold">Price</span>
                               <span className="font-bold text-primary">
-                                ₹{offer.seller_prices.base_price}/kg
+                                ₹{offer.price}/{offer.unit}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="font-semibold">Max Order Quant</span>
-                              <span>{offer.seller_prices.max_order_quantity} kg</span>
+                              <span>{offer.maxOrderQty} {offer.unit}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="font-semibold">Avl</span>
-                              <span>{new Date(offer.seller_prices.avl_from).toLocaleDateString()}</span>
+                              <span>{new Date(offer.availableFrom).toLocaleDateString()}</span>
                             </div>
                           </div>
 
@@ -312,12 +319,12 @@ const CommodityDetail = () => {
                             <h4 className="font-semibold text-primary">FPO Details</h4>
                             <div className="flex justify-between">
                               <span className="font-semibold">Reg No.</span>
-                              <span>{offer.seller_details.registration_no}</span>
+                              <span>{offer.id}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="font-semibold">Address</span>
                               <span className="text-right max-w-[60%]">
-                                {offer.seller_details.address} - {offer.seller_details.pincode}
+                                {offer.address} - {offer.pincode}
                               </span>
                             </div>
                           </div>
@@ -327,7 +334,7 @@ const CommodityDetail = () => {
                             className="w-full" 
                             size="lg"
                             onClick={() => {
-                              if (quoteNumbers[offerId]) {
+                              if (quoteNumbers[offer.id]) {
                                 navigate("/quote-tracking");
                               } else {
                                 setSelectedOffer(convertToLegacyOffer(offer));
@@ -336,8 +343,8 @@ const CommodityDetail = () => {
                             }}
                           >
                             <Package className="w-4 h-4 mr-2" />
-                            {quoteNumbers[offerId] 
-                              ? `Track Quote: ${quoteNumbers[offerId]}` 
+                            {quoteNumbers[offer.id] 
+                              ? `Track Quote: ${quoteNumbers[offer.id]}` 
                               : "Generate Quote"}
                           </Button>
                         </CardContent>
