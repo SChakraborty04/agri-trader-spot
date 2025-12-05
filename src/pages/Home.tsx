@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
@@ -14,6 +15,25 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAllFPOOffers, FPOOfferAPI } from "@/lib/api";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
 import { FPOOffer } from "@/lib/mockData";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring" as const, stiffness: 400, damping: 25 },
+  },
+};
 
 type SortOption = "price-asc" | "price-desc" | "commodity" | "location";
 
@@ -130,7 +150,11 @@ const Home = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Market Overview */}
-        <section className="animate-fade-in">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
+        >
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-semibold text-foreground tracking-tight">
@@ -173,27 +197,37 @@ const Home = () => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-3 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            key={page}
+          >
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-28 rounded-2xl" />
+                <Skeleton key={i} className="h-28 rounded-2xl shimmer" />
               ))
             ) : error ? (
               <div className="col-span-full text-center py-12">
                 <p className="text-destructive">Failed to load market data</p>
               </div>
             ) : (
-              visibleData?.map((chip, i) => (
-                <div key={chip.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
+              visibleData?.map((chip) => (
+                <motion.div key={chip.id} variants={itemVariants}>
                   <MarketChip data={chip} />
-                </div>
+                </motion.div>
               ))
             )}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         {/* FPO Offers */}
-        <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring" as const, stiffness: 300, damping: 25, delay: 0.1 }}
+        >
           <div className="flex flex-col gap-5 mb-6">
             <div className="flex items-center justify-between">
               <div>
@@ -266,28 +300,37 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            key={`fpo-${fpoPage}-${searchQuery}-${sortBy}`}
+          >
             {fpoLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-2xl" />
+                <Skeleton key={i} className="h-64 rounded-2xl shimmer" />
               ))
             ) : visibleFPOs.length === 0 ? (
               <div className="col-span-full text-center py-16">
                 <p className="text-muted-foreground">No offers found matching your search.</p>
               </div>
             ) : (
-              visibleFPOs.map((offer, i) => {
+              visibleFPOs.map((offer) => {
                 const addressParts = offer.address.split(", ");
                 const state = addressParts[addressParts.length - 1] || "";
                 const district = addressParts[addressParts.length - 2] || "";
                 const slug = `${offer.commodity.toLowerCase().replace(/\s+/g, '')}-${offer.variety.toLowerCase().replace(/\s+/g, '')}`;
 
                 return (
-                  <div 
+                  <motion.div 
                     key={offer.id} 
-                    className="apple-card p-5 cursor-pointer press-effect animate-fade-in"
-                    style={{ animationDelay: `${i * 50}ms` }}
+                    variants={itemVariants}
+                    className="apple-card p-5 cursor-pointer"
                     onClick={() => navigate(`/${slug}`)}
+                    whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0, 0, 0, 0.08)" }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -338,19 +381,19 @@ const Home = () => {
                       </div>
                       <Button 
                         size="sm"
-                        className="rounded-xl h-9 px-4 bg-primary hover:bg-primary/90 press-effect"
+                        className="rounded-xl h-9 px-4 bg-primary hover:bg-primary/90"
                         onClick={(e) => handleGenerateQuote(offer, e)}
                       >
                         <FileText className="w-3.5 h-3.5 mr-1.5" />
                         Quote
                       </Button>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
       </main>
 
       {selectedOffer && (
