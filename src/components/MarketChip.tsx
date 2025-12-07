@@ -18,7 +18,10 @@ export const MarketChip = ({ data }: MarketChipProps) => {
       onClick={() => navigate(`/${slug}`)}
       className={cn(
         "apple-card p-4 cursor-pointer press-effect group",
-        "hover:shadow-apple-lg"
+        "hover:shadow-apple-lg",
+        isPositive 
+          ? "border-gain/40" 
+          : "border-loss/40"
       )}
     >
       <div className="flex items-center gap-3">
