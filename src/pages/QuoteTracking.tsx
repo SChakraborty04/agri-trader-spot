@@ -55,7 +55,7 @@ const QuoteTracking = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 pb-dock">
         {quotes.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">

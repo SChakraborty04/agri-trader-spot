@@ -70,7 +70,7 @@ const OrderTracking = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 pb-dock">
         {orders.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">

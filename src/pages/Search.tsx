@@ -62,7 +62,7 @@ const Search = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 pb-dock">
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">

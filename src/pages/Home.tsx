@@ -129,7 +129,7 @@ const Home = () => {
       {/* Price Ticker */}
       <PriceTicker />
 
-      <main className="container mx-auto px-4 py-8 space-y-10">
+      <main className="container mx-auto px-4 py-8 pb-dock space-y-10">
         {/* Market Overview */}
         <section className="animate-fade-in">
           <div className="flex items-center justify-between mb-6">
