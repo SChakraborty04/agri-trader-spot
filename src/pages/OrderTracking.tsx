@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MobileDock } from "@/components/MobileDock";
 import { mockOrderHistory, Quote } from "@/lib/mockData";
 import OrderTrackingProgress from "@/components/OrderTrackingProgress";
 import { useState } from "react";
@@ -261,6 +262,8 @@ const OrderTracking = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <MobileDock />
     </div>
   );
 };

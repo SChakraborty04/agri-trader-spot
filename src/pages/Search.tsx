@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { FPOCard } from "@/components/FPOCard";
+import { MobileDock } from "@/components/MobileDock";
 import { fpoOffers } from "@/lib/mockData";
 import { useNavigate } from "react-router-dom";
 
@@ -180,6 +181,8 @@ const Search = () => {
           </div>
         </div>
       </main>
+
+      <MobileDock />
     </div>
   );
 };

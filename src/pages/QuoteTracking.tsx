@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MobileDock } from "@/components/MobileDock";
 import { Quote } from "@/lib/mockData";
 
 const getStatusColor = (status: Quote["status"]) => {
@@ -153,6 +154,8 @@ const QuoteTracking = () => {
           </div>
         )}
       </main>
+
+      <MobileDock />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
+import { MobileDock } from "@/components/MobileDock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTicker } from "@/hooks/useTicker";
@@ -352,6 +353,9 @@ const Home = () => {
           </div>
         </section>
       </main>
+
+      {/* Mobile Dock */}
+      <MobileDock />
 
       {selectedOffer && (
         <QuoteFormDialog

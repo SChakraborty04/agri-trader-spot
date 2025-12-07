@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { MobileDock } from "@/components/MobileDock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -309,6 +310,8 @@ const AllFPOs = () => {
           )}
         </section>
       </main>
+
+      <MobileDock />
 
       {selectedOffer && (
         <QuoteFormDialog

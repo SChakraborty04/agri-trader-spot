@@ -4,6 +4,7 @@ import { ArrowLeft, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MarketChip } from "@/components/MarketChip";
+import { MobileDock } from "@/components/MobileDock";
 import { useTicker } from "@/hooks/useTicker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -152,6 +153,8 @@ const AllCrops = () => {
           )}
         </div>
       </main>
+
+      <MobileDock />
     </div>
   );
 };
