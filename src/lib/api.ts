@@ -1,5 +1,95 @@
 const API_BASE_URL = "https://api3.boxfarming.in";
+const AUTH_BASE_URL = `${API_BASE_URL}/vboxtrade/auth`;
 
+// Auth Types
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface VerifyOTPRequest {
+  email: string;
+  otp: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  user?: AuthUser;
+}
+
+export interface AuthError {
+  detail: string;
+}
+
+// Auth API Functions
+export async function registerUser(data: RegisterRequest): Promise<AuthResponse> {
+  const response = await fetch(`${AUTH_BASE_URL}/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  
+  if (!response.ok) {
+    const error: AuthError = await response.json();
+    throw new Error(error.detail || "Failed to send OTP");
+  }
+  
+  return response.json();
+}
+
+export async function verifyOTP(data: VerifyOTPRequest): Promise<AuthResponse> {
+  const response = await fetch(`${AUTH_BASE_URL}/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  
+  if (!response.ok) {
+    const error: AuthError = await response.json();
+    throw new Error(error.detail || "OTP verification failed");
+  }
+  
+  return response.json();
+}
+
+export async function resendOTP(email: string): Promise<AuthResponse> {
+  const response = await fetch(`${AUTH_BASE_URL}/resend-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  
+  if (!response.ok) {
+    const error: AuthError = await response.json();
+    throw new Error(error.detail || "Failed to resend OTP");
+  }
+  
+  return response.json();
+}
+
+export async function getProfile(token: string): Promise<AuthUser> {
+  const response = await fetch(`${AUTH_BASE_URL}/profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  
+  if (!response.ok) {
+    const error: AuthError = await response.json();
+    throw new Error(error.detail || "Failed to fetch profile");
+  }
+  
+  return response.json();
+}
+
+// Market Types
 export interface MarketChipAPI {
   id: string;
   commodity: string;
@@ -43,7 +133,6 @@ export async function fetchFPOOffers(commodity: string, variety: string): Promis
     throw new Error("Failed to fetch FPO offers");
   }
   const data: FPOOfferAPI[] = await response.json();
-  // Filter by commodity and variety client-side as API may return all
   return data.filter(
     (offer) => 
       offer.commodity.toLowerCase() === commodity.toLowerCase() && 
