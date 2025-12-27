@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://v-box-backend.vercel.app";
+const API_BASE_URL = "https://api3.boxfarming.in";
 
 export interface MarketChipAPI {
   id: string;
