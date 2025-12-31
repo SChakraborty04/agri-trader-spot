@@ -1,5 +1,6 @@
-const API_PRIMARY = "https://api3.boxfarming.in";
-const API_FALLBACK = "https://v-box-backend.vercel.app";
+// Read API hosts from environment (Vite). Falls back to known defaults.
+const API_PRIMARY = import.meta.env.VITE_API_PRIMARY ?? "https://api3.boxfarming.in";
+const API_FALLBACK = import.meta.env.VITE_API_FALLBACK ?? "https://v-box-backend.vercel.app";
 
 export interface MarketChipAPI {
   id: string;
