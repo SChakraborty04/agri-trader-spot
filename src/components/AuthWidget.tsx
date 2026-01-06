@@ -17,6 +17,7 @@ export function AuthWidget() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
 
   // Check for existing session on mount
@@ -39,9 +40,13 @@ export function AuthWidget() {
       toast.error("Please enter name");
       return;
     }
+    if (mode === "register" && !phone.trim()) {
+      toast.error("Please enter phone number");
+      return;
+    }
     setLoading(true);
     try {
-      await register(mode === "register" ? name.trim() : "User", email.trim());
+      await register(mode === "register" ? name.trim() : "User", email.trim(), mode === "register" ? phone.trim() : undefined);
       toast.success("OTP sent to your email");
       setStep("otp");
     } catch (err: any) {
@@ -94,6 +99,7 @@ export function AuthWidget() {
     setStep("idle");
     setEmail("");
     setName("");
+    setPhone("");
     setOtp("");
   };
 
@@ -154,17 +160,31 @@ export function AuthWidget() {
           {step === "form" && (
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "register" && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                    className="h-11 rounded-xl"
-                    disabled={loading}
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      className="h-11 rounded-xl"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Your phone number"
+                      className="h-11 rounded-xl"
+                      disabled={loading}
+                    />
+                  </div>
+                </>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
