@@ -16,6 +16,7 @@ import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -32,8 +33,9 @@ const App = () => (
             <Route path="/all-crops" element={<AllCrops />} />
             <Route path="/all-fpos" element={<AllFPOs />} />
             <Route path="/:slug" element={<CommodityDetail />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/quote-tracking" element={<QuoteTracking />} />
             <Route path="/quote-history" element={<QuoteHistory />} />
             <Route path="/order-tracking" element={<OrderTracking />} />

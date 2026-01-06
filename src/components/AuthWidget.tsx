@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -108,12 +109,20 @@ export function AuthWidget() {
     setStep("form");
   };
 
+  const navigate = useNavigate();
+
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground hidden sm:inline">
-          {user.name}
-        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/profile")}
+          className="rounded-xl h-9 px-3"
+        >
+          <User className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">{user.name}</span>
+        </Button>
         <Button
           variant="ghost"
           size="icon"
