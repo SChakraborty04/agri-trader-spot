@@ -49,6 +49,44 @@ export interface VerifyOtpResponse {
   user: AuthUser;
 }
 
+// Quotation types
+export interface QuotationRequest {
+  seller_price_id: number;
+  quantity: number;
+  offer_price?: number;
+  delivery_date?: string;
+  delivery_location?: string;
+  payment_terms?: string;
+  valid_until?: string;
+  notes?: string;
+}
+
+export interface QuotationResponse {
+  id: string;
+  quotation_number: string;
+  quotation_date: string;
+  seller_price_id: number;
+  seller_name: string;
+  commodity_name: string;
+  variety_name: string;
+  quantity: number;
+  unit_of_measure: string;
+  offer_price: number;
+  currency: string;
+  delivery_date: string | null;
+  delivery_location: string | null;
+  payment_terms: string | null;
+  valid_until: string | null;
+  status: "pending" | "negotiating" | "accepted" | "rejected" | "expired" | "converted_to_order";
+  notes: string | null;
+  created_at: string;
+}
+
+export interface QuotationsListResponse {
+  quotations: QuotationResponse[];
+  total: number;
+}
+
 const AUTH_TOKEN_KEY = "api_token";
 
 export function setAuthToken(token: string) {
@@ -157,4 +195,43 @@ export async function getProfile(): Promise<AuthUser> {
   if (!res.ok) throw new Error("Failed to fetch profile");
   const data = await res.json();
   return data as AuthUser;
+}
+
+// Quotation endpoints
+export async function createQuotation(data: QuotationRequest): Promise<QuotationResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to create a quotation");
+  
+  const res = await fetchWithFallback(`/vboxtrade/quotations/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to create quotation" }));
+    throw new Error(error.detail || "Failed to create quotation");
+  }
+  
+  return res.json();
+}
+
+export async function fetchQuotations(limit: number = 50, offset: number = 0): Promise<QuotationsListResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to view quotations");
+  
+  const res = await fetchWithFallback(`/vboxtrade/quotations/?limit=${limit}&offset=${offset}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to fetch quotations" }));
+    throw new Error(error.detail || "Failed to fetch quotations");
+  }
+  
+  return res.json();
 }
