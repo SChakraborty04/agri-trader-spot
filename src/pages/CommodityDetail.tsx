@@ -17,9 +17,9 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { useTicker } from "@/hooks/useTicker";
 import { useQuery } from "@tanstack/react-query";
-import { fetchFPOOffers, FPOOfferAPI } from "@/lib/api";
+import { fetchFPOOffers, FPOOfferAPI, getAuthToken } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FPOOffer } from "@/lib/mockData";
+import { toast } from "sonner";
 
 const CommodityDetail = () => {
   const { slug } = useParams();
@@ -28,7 +28,7 @@ const CommodityDetail = () => {
   const [location, setLocation] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [showFilters, setShowFilters] = useState(true);
-  const [selectedOffer, setSelectedOffer] = useState<FPOOffer | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<FPOOfferAPI | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [quoteNumbers, setQuoteNumbers] = useState<Record<string, string>>({});
   const { data: tickerData = [], isLoading: tickerLoading } = useTicker(100);
@@ -68,32 +68,14 @@ const CommodityDetail = () => {
     setQuoteNumbers(prev => ({ ...prev, [offerId]: quoteNo }));
   };
 
-  // Convert API offer to legacy format for QuoteFormDialog
-  const convertToLegacyOffer = (offer: FPOOfferAPI): FPOOffer => {
-    const addressParts = offer.address.split(", ");
-    const state = addressParts[addressParts.length - 1] || "";
-    const district = addressParts[addressParts.length - 2] || "";
-    
-    return {
-      id: offer.id,
-      fpoName: offer.fpoName,
-      fpoLogo: offer.fpoLogo || "🏢",
-      location: offer.address,
-      commodity: offer.commodity,
-      variety: offer.variety,
-      quality: offer.grade,
-      price: offer.price,
-      unit: offer.unit,
-      quantity: offer.quantity,
-      availableFrom: offer.availableFrom,
-      minOrderQty: offer.minOrderQty,
-      verified: offer.verified,
-      pincode: offer.pincode,
-      block: addressParts[0] || "",
-      district: district,
-      state: state,
-      distance: "N/A",
-    };
+  const handleRequestQuote = (offer: FPOOfferAPI) => {
+    const token = getAuthToken();
+    if (!token) {
+      toast.error("Please login to request a quotation");
+      return;
+    }
+    setSelectedOffer(offer);
+    setDialogOpen(true);
   };
 
   if (tickerLoading) {
@@ -337,8 +319,7 @@ const CommodityDetail = () => {
                               if (quoteNumbers[offer.id]) {
                                 navigate("/quote-tracking");
                               } else {
-                                setSelectedOffer(convertToLegacyOffer(offer));
-                                setDialogOpen(true);
+                                handleRequestQuote(offer);
                               }
                             }}
                           >

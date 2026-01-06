@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, MapPin, ArrowLeft, FileText, Search, ArrowUpDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllFPOOffers, FPOOfferAPI } from "@/lib/api";
+import { fetchAllFPOOffers, FPOOfferAPI, getAuthToken } from "@/lib/api";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
-import { FPOOffer } from "@/lib/mockData";
+import { toast } from "sonner";
 
 type SortOption = "price-asc" | "price-desc" | "commodity" | "location" | "fpo-name";
 
@@ -20,7 +20,7 @@ const AllFPOs = () => {
   const [page, setPage] = useState(0);
   const itemsPerPage = 12;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState<FPOOffer | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<FPOOfferAPI | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
   
@@ -77,29 +77,12 @@ const AllFPOs = () => {
 
   const handleGenerateQuote = (offer: FPOOfferAPI, e: React.MouseEvent) => {
     e.stopPropagation();
-    const legacyOffer: FPOOffer = {
-      id: offer.id,
-      fpoName: offer.fpoName,
-      fpoLogo: "🏢",
-      commodity: offer.commodity,
-      variety: offer.variety,
-      price: offer.price,
-      unit: offer.unit,
-      quantity: offer.maxOrderQty,
-      minOrderQty: offer.minOrderQty,
-      location: offer.address,
-      pincode: "",
-      block: "",
-      district: "",
-      state: "",
-      distance: "N/A",
-      lat: 0,
-      lng: 0,
-      quality: offer.grade,
-      availableFrom: new Date().toISOString(),
-      verified: true
-    };
-    setSelectedOffer(legacyOffer);
+    const token = getAuthToken();
+    if (!token) {
+      toast.error("Please login to request a quotation");
+      return;
+    }
+    setSelectedOffer(offer);
     setDialogOpen(true);
   };
 
