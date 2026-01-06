@@ -1,245 +1,479 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Calendar, Clock, RefreshCw, User, Building2, CreditCard, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Quote, Message, mockQuoteHistory } from "@/lib/mockData";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NavigationMenu } from "@/components/NavigationMenu";
+import { AuthWidget } from "@/components/AuthWidget";
+import { MobileDock } from "@/components/MobileDock";
+import { fetchQuotations, QuotationResponse, getAuthToken } from "@/lib/api";
+import { toast } from "sonner";
 
-const getStatusColor = (status: Quote["status"]) => {
+const getStatusColor = (status: QuotationResponse["status"]) => {
   switch (status) {
-    case "Open":
-      return "bg-blue-500/10 text-blue-500";
-    case "Ordered":
-      return "bg-green-500/10 text-green-500";
-    case "Closed":
-      return "bg-gray-500/10 text-gray-500";
-    case "Cancelled":
-      return "bg-orange-500/10 text-orange-500";
-    case "Rejected":
-      return "bg-red-500/10 text-red-500";
+    case "pending":
+      return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
+    case "negotiating":
+      return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+    case "accepted":
+      return "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20";
+    case "rejected":
+      return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
+    case "expired":
+      return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
+    case "converted_to_order":
+      return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+    default:
+      return "bg-gray-500/10 text-gray-500 border-gray-500/20";
   }
+};
+
+const formatStatus = (status: string) => {
+  return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+// Mock conversation messages (since API doesn't have messages endpoint yet)
+interface ConversationMessage {
+  id: string;
+  sender: "buyer" | "seller" | "system";
+  senderName: string;
+  message: string;
+  timestamp: string;
+}
+
+const generateMockConversation = (quote: QuotationResponse): ConversationMessage[] => {
+  const messages: ConversationMessage[] = [
+    {
+      id: "1",
+      sender: "system",
+      senderName: "System",
+      message: `Quote request created for ${quote.quantity} ${quote.unit_of_measure} of ${quote.commodity_name} (${quote.variety_name}) at ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}.`,
+      timestamp: quote.created_at,
+    },
+  ];
+
+  if (quote.notes) {
+    messages.push({
+      id: "2",
+      sender: "buyer",
+      senderName: "You",
+      message: quote.notes,
+      timestamp: quote.created_at,
+    });
+  }
+
+  if (quote.status === "negotiating") {
+    messages.push({
+      id: "3",
+      sender: "seller",
+      senderName: quote.seller_name,
+      message: `Thank you for your interest. We're reviewing your offer of ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}. We'll get back to you shortly with our response.`,
+      timestamp: new Date(new Date(quote.created_at).getTime() + 3600000).toISOString(),
+    });
+  }
+
+  if (quote.status === "accepted") {
+    messages.push({
+      id: "3",
+      sender: "seller",
+      senderName: quote.seller_name,
+      message: `Great news! We've accepted your quotation for ${quote.quantity} ${quote.unit_of_measure} at ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}. Please proceed with the order.`,
+      timestamp: new Date(new Date(quote.created_at).getTime() + 7200000).toISOString(),
+    });
+  }
+
+  if (quote.status === "rejected") {
+    messages.push({
+      id: "3",
+      sender: "seller",
+      senderName: quote.seller_name,
+      message: `We regret to inform you that we cannot accept your offer at this time. Please feel free to submit a new quotation.`,
+      timestamp: new Date(new Date(quote.created_at).getTime() + 7200000).toISOString(),
+    });
+  }
+
+  return messages;
 };
 
 const QuoteDetail = () => {
   const { quoteNo } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [newMessage, setNewMessage] = useState("");
+  const [quote, setQuote] = useState<QuotationResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
 
-  useEffect(() => {
-    // Check localStorage first
-    const storedQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-    let foundQuote = storedQuotes.find((q: Quote) => q.quoteNo === quoteNo);
-    
-    // If not in localStorage, check mock quote history
-    if (!foundQuote) {
-      foundQuote = mockQuoteHistory.find((q: Quote) => q.quoteNo === quoteNo);
+  const loadQuote = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    
-    if (foundQuote) {
-      setQuote(foundQuote);
+
+    try {
+      setLoading(true);
+      const response = await fetchQuotations(100, 0);
+      const foundQuote = response.quotations.find(
+        (q) => q.quotation_number === quoteNo
+      );
+      
+      if (foundQuote) {
+        setQuote(foundQuote);
+        setMessages(generateMockConversation(foundQuote));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to load quote details");
+    } finally {
+      setLoading(false);
     }
-  }, [quoteNo]);
-
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !quote) return;
-
-    const message: Message = {
-      id: Date.now().toString(),
-      sender: "buyer",
-      senderName: "You",
-      message: newMessage,
-      timestamp: new Date().toLocaleString(),
-    };
-
-    const updatedQuote = {
-      ...quote,
-      messages: [...(quote.messages || []), message],
-    };
-
-    // Update localStorage
-    const storedQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const updatedQuotes = storedQuotes.map((q: Quote) =>
-      q.quoteNo === quoteNo ? updatedQuote : q
-    );
-    localStorage.setItem("quotes", JSON.stringify(updatedQuotes));
-
-    setQuote(updatedQuote);
-    setNewMessage("");
-    
-    toast({
-      title: "Message sent",
-      description: "Your message has been sent to the FPO",
-    });
   };
 
-  if (!quote) {
+  useEffect(() => {
+    loadQuote();
+  }, [quoteNo]);
+
+  const isLoggedIn = !!getAuthToken();
+
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Quote not found</p>
-          <Button onClick={() => navigate("/quote-history")}>
-            Back to Quote History
-          </Button>
-        </div>
+        <Card className="rounded-2xl max-w-md w-full mx-4">
+          <CardContent className="py-12 text-center">
+            <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground mb-4">Please login to view quote details</p>
+            <Button onClick={() => navigate("/login")} className="rounded-xl">
+              Login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b border-border/50">
+          <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
+            <NavigationMenu />
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+        </header>
+        <main className="max-w-4xl mx-auto px-4 py-6 pb-24 space-y-6">
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-6 w-32" />
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-28" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  if (!quote) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="rounded-2xl max-w-md w-full mx-4">
+          <CardContent className="py-12 text-center">
+            <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-lg font-medium mb-2">Quote not found</p>
+            <p className="text-muted-foreground mb-4">
+              The quote "{quoteNo}" could not be found
+            </p>
+            <Button onClick={() => navigate("/quote-history")} className="rounded-xl">
+              Back to Quote History
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const totalAmount = quote.offer_price * quote.quantity;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/quote-history")}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-xl font-bold text-primary">{quote.quoteNo}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {quote.cropName} - {quote.fpoName}
-                </p>
-              </div>
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b border-border/50">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <NavigationMenu />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="rounded-xl"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold">{quote.quotation_number}</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                {quote.commodity_name} - {quote.variety_name}
+              </p>
             </div>
-            <Badge className={getStatusColor(quote.status)}>
-              {quote.status}
-            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={loadQuote}
+              className="rounded-xl"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+            <AuthWidget />
           </div>
         </div>
       </header>
 
-      {/* Quote Details */}
-      <div className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Quantity</p>
-              <p className="font-medium text-foreground">
-                {quote.quantity} {quote.unit}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Price</p>
-              <p className="font-medium text-foreground">
-                ₹{quote.price}/{quote.unit}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Location</p>
-              <p className="font-medium text-foreground">{quote.location}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Total Amount</p>
-              <p className="font-medium text-primary">
-                ₹{(quote.price * quote.quantity).toFixed(2)}
-              </p>
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 pb-24 space-y-6">
+        {/* Status Banner */}
+        <Card className="rounded-2xl overflow-hidden">
+          <div className={`px-6 py-4 ${getStatusColor(quote.status)} border-b`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium opacity-80">Quote Status</p>
+                <p className="text-xl font-bold">{formatStatus(quote.status)}</p>
+              </div>
+              <Badge variant="outline" className={getStatusColor(quote.status)}>
+                {formatStatus(quote.status)}
+              </Badge>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 max-w-4xl">
-          {(!quote.messages || quote.messages.length === 0) ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No messages yet. Start the conversation with the FPO.
-              </p>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Quote Date
+                </p>
+                <p className="font-medium">
+                  {new Date(quote.quotation_date).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Created At
+                </p>
+                <p className="font-medium">
+                  {new Date(quote.created_at).toLocaleTimeString([], { 
+                    hour: "2-digit", 
+                    minute: "2-digit" 
+                  })}
+                </p>
+              </div>
+              {quote.valid_until && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Valid Until</p>
+                  <p className="font-medium">
+                    {new Date(quote.valid_until).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+              {quote.delivery_date && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Delivery Date</p>
+                  <p className="font-medium">
+                    {new Date(quote.delivery_date).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {quote.messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    message.sender === "buyer" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {message.sender === "fpo" && (
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {quote.fpoName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+          </CardContent>
+        </Card>
+
+        {/* Quote Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Product Info */}
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Product Details</h3>
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Commodity</span>
+                  <span className="font-medium">{quote.commodity_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Variety</span>
+                  <span className="font-medium">{quote.variety_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Quantity</span>
+                  <span className="font-medium">{quote.quantity} {quote.unit_of_measure}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Offer Price</span>
+                  <span className="font-medium">{quote.currency} {quote.offer_price}/{quote.unit_of_measure}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total Amount</span>
+                  <span className="text-xl font-bold text-primary">
+                    {quote.currency} {totalAmount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Seller & Delivery Info */}
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Seller & Delivery</h3>
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Seller</span>
+                  <span className="font-medium">{quote.seller_name}</span>
+                </div>
+                {quote.delivery_location && (
+                  <div className="flex justify-between items-start">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      Delivery
+                    </span>
+                    <span className="font-medium text-right max-w-[60%]">
+                      {quote.delivery_location}
+                    </span>
+                  </div>
+                )}
+                {quote.payment_terms && (
+                  <div className="flex justify-between items-start">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <CreditCard className="w-3 h-3" />
+                      Payment
+                    </span>
+                    <span className="font-medium text-right max-w-[60%]">
+                      {quote.payment_terms}
+                    </span>
+                  </div>
+                )}
+                {quote.notes && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-muted-foreground flex items-center gap-1 mb-2">
+                        <FileText className="w-3 h-3" />
+                        Notes
+                      </p>
+                      <p className="text-sm bg-muted/50 p-3 rounded-lg">{quote.notes}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Conversation History */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Conversation History</h3>
+            </div>
+            <Separator className="mb-4" />
+            
+            {messages.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No conversation history yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg) => (
                   <div
-                    className={`flex flex-col max-w-[70%] ${
-                      message.sender === "buyer" ? "items-end" : "items-start"
+                    key={msg.id}
+                    className={`flex gap-3 ${
+                      msg.sender === "buyer" ? "justify-end" : "justify-start"
                     }`}
                   >
+                    {msg.sender !== "buyer" && (
+                      <Avatar className="w-9 h-9 shrink-0">
+                        <AvatarFallback 
+                          className={
+                            msg.sender === "system" 
+                              ? "bg-muted text-muted-foreground text-xs" 
+                              : "bg-primary/10 text-primary text-xs"
+                          }
+                        >
+                          {msg.sender === "system" ? "SYS" : msg.senderName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div
-                      className={`rounded-lg px-4 py-3 ${
-                        message.sender === "buyer"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                      className={`flex flex-col max-w-[75%] ${
+                        msg.sender === "buyer" ? "items-end" : "items-start"
                       }`}
                     >
-                      <p className="text-sm font-medium mb-1">
-                        {message.senderName}
-                      </p>
-                      <p className="text-sm whitespace-pre-wrap">
-                        {message.message}
+                      <div
+                        className={`rounded-2xl px-4 py-3 ${
+                          msg.sender === "buyer"
+                            ? "bg-primary text-primary-foreground"
+                            : msg.sender === "system"
+                            ? "bg-muted/50 border border-border"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <p className="text-xs font-medium mb-1 opacity-80">
+                          {msg.senderName}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(msg.timestamp).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {message.timestamp}
-                    </p>
+                    {msg.sender === "buyer" && (
+                      <Avatar className="w-9 h-9 shrink-0">
+                        <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                          You
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                   </div>
-                  {message.sender === "buyer" && (
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="bg-secondary text-secondary-foreground">
-                        You
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                ))}
+              </div>
+            )}
 
-      {/* Message Input */}
-      <div className="bg-card border-t border-border">
-        <div className="container mx-auto px-4 py-4 max-w-4xl">
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Type your message to the FPO..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              className="min-h-[80px] resize-none"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-              size="icon"
-              className="h-[80px] w-[80px]"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Press Enter to send, Shift + Enter for new line
-          </p>
-        </div>
-      </div>
+            {/* Read-only notice */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground text-center">
+                📧 Conversation history is read-only. Messages are managed through the seller portal.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+
+      <MobileDock />
     </div>
   );
 };

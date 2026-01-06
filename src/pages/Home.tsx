@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAllFPOOffers, FPOOfferAPI, getAuthToken } from "@/lib/api";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
 import { toast } from "sonner";
+import { useQuoteNotifications } from "@/hooks/useQuoteNotifications";
 
 type SortOption = "price-asc" | "price-desc" | "commodity" | "location";
 
@@ -31,6 +32,9 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
   
+  // Start background polling for quote status notifications
+  useQuoteNotifications();
+
   const { data: fpoOffers = [], isLoading: fpoLoading } = useQuery({
     queryKey: ['all-fpo-offers'],
     queryFn: fetchAllFPOOffers,
