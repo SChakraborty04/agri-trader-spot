@@ -115,28 +115,13 @@ const Home = () => {
       {/* Header - Apple vibrancy style */}
       <header className="sticky top-0 z-50 vibrancy border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-center relative">
+            <div className="absolute left-0">
               <NavigationMenu />
             </div>
             <h1 className="text-xl font-semibold text-foreground tracking-tight">
               VBOX Trading
             </h1>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                className="text-foreground hover:bg-secondary/80 rounded-xl press-effect"
-                onClick={() => navigate("/login")}
-              >
-                Sign In
-              </Button>
-              <Button
-                className="rounded-xl press-effect bg-primary hover:bg-primary/90"
-                onClick={() => navigate("/register")}
-              >
-                Register
-              </Button>
-            </div>
           </div>
         </div>
       </header>
