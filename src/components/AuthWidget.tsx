@@ -4,13 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { register, verifyOtp, resendOtp, getProfile, getAuthToken, clearAuthToken, AuthUser } from "@/lib/api";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
-type AuthStep = "idle" | "register" | "otp";
+type AuthMode = "login" | "register";
+type AuthStep = "idle" | "form" | "otp";
 
 export function AuthWidget() {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [mode, setMode] = useState<AuthMode>("login");
   const [step, setStep] = useState<AuthStep>("idle");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -27,19 +29,23 @@ export function AuthWidget() {
     }
   }, []);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) {
-      toast.error("Please enter name and email");
+    if (!email.trim()) {
+      toast.error("Please enter email");
+      return;
+    }
+    if (mode === "register" && !name.trim()) {
+      toast.error("Please enter name");
       return;
     }
     setLoading(true);
     try {
-      await register(name.trim(), email.trim());
+      await register(mode === "register" ? name.trim() : "User", email.trim());
       toast.success("OTP sent to your email");
       setStep("otp");
     } catch (err: any) {
-      toast.error(err?.message || "Registration failed");
+      toast.error(err?.message || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -60,7 +66,7 @@ export function AuthWidget() {
         resetForm();
       }
     } catch (err: any) {
-      toast.error(err?.message || "Verification failed");
+      toast.error("Invalid OTP. Please check and try again.");
     } finally {
       setLoading(false);
     }
@@ -91,6 +97,11 @@ export function AuthWidget() {
     setOtp("");
   };
 
+  const openDialog = (authMode: AuthMode) => {
+    setMode(authMode);
+    setStep("form");
+  };
+
   if (user) {
     return (
       <div className="flex items-center gap-2">
@@ -111,37 +122,50 @@ export function AuthWidget() {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setStep("register")}
-        className="rounded-xl h-9 px-3"
-      >
-        <User className="h-4 w-4 mr-2" />
-        <span className="hidden sm:inline">Login</span>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => openDialog("login")}
+          className="rounded-xl h-9 px-3"
+        >
+          <User className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Login</span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openDialog("register")}
+          className="rounded-xl h-9 px-3"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Register</span>
+        </Button>
+      </div>
 
       <Dialog open={step !== "idle"} onOpenChange={(open) => !open && resetForm()}>
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle>
-              {step === "register" ? "Register / Login" : "Verify OTP"}
+              {step === "otp" ? "Verify OTP" : mode === "register" ? "Register" : "Login"}
             </DialogTitle>
           </DialogHeader>
 
-          {step === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="h-11 rounded-xl"
-                  disabled={loading}
-                />
-              </div>
+          {step === "form" && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === "register" && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    className="h-11 rounded-xl"
+                    disabled={loading}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -161,6 +185,13 @@ export function AuthWidget() {
               >
                 {loading ? "Sending OTP..." : "Continue"}
               </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === "register" ? (
+                  <>Already have an account? <button type="button" onClick={() => setMode("login")} className="text-primary hover:underline">Login</button></>
+                ) : (
+                  <>New here? <button type="button" onClick={() => setMode("register")} className="text-primary hover:underline">Register</button></>
+                )}
+              </p>
             </form>
           )}
 
