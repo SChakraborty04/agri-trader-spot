@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { AuthWidget } from "@/components/AuthWidget";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
 import { MobileDock } from "@/components/MobileDock";
@@ -115,13 +116,12 @@ const Home = () => {
       {/* Header - Apple vibrancy style */}
       <header className="sticky top-0 z-50 vibrancy border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-center relative">
-            <div className="absolute left-0">
-              <NavigationMenu />
-            </div>
+          <div className="flex items-center justify-between">
+            <NavigationMenu />
             <h1 className="text-xl font-semibold text-foreground tracking-tight">
               VBOX Trading
             </h1>
+            <AuthWidget />
           </div>
         </div>
       </header>
