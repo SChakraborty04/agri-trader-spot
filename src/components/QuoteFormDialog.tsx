@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FPOOfferAPI, createQuotation, getAuthToken } from "@/lib/api";
+import { FPOOfferAPI, createQuotation, getAuthToken, fetchPaymentTerms, PaymentTerm } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 
 interface QuoteFormDialogProps {
   open: boolean;
@@ -33,9 +40,25 @@ export const QuoteFormDialog = ({
   const [location, setLocation] = useState("");
   const [offerPrice, setOfferPrice] = useState(offer.price.toString());
   const [deliveryDate, setDeliveryDate] = useState("");
+  const [paymentTermId, setPaymentTermId] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Payment terms state
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([]);
+  const [loadingTerms, setLoadingTerms] = useState(false);
+
+  // Fetch payment terms when dialog opens
+  useEffect(() => {
+    if (open && paymentTerms.length === 0) {
+      setLoadingTerms(true);
+      fetchPaymentTerms()
+        .then((terms) => setPaymentTerms(terms))
+        .catch((err) => console.error("Failed to fetch payment terms:", err))
+        .finally(() => setLoadingTerms(false));
+    }
+  }, [open]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -67,6 +90,7 @@ export const QuoteFormDialog = ({
         offer_price: parseFloat(offerPrice),
         delivery_date: deliveryDate || undefined,
         delivery_location: location || undefined,
+        payment_terms: paymentTermId ? parseInt(paymentTermId) : undefined,
         notes: notes || undefined,
       });
 
@@ -79,6 +103,7 @@ export const QuoteFormDialog = ({
       setLocation("");
       setOfferPrice(offer.price.toString());
       setDeliveryDate("");
+      setPaymentTermId("");
       setNotes("");
       setError(null);
     } catch (err: any) {
@@ -180,6 +205,37 @@ export const QuoteFormDialog = ({
               className="h-11 rounded-xl"
               disabled={loading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paymentTerms">Payment Terms</Label>
+            <Select
+              value={paymentTermId}
+              onValueChange={setPaymentTermId}
+              disabled={loading || loadingTerms}
+            >
+              <SelectTrigger className="h-11 rounded-xl bg-background">
+                <SelectValue placeholder={loadingTerms ? "Loading..." : "Select payment terms"} />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                {loadingTerms ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  paymentTerms.map((term) => (
+                    <SelectItem key={term.id} value={term.id.toString()}>
+                      {term.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {paymentTermId && paymentTerms.find(t => t.id.toString() === paymentTermId)?.description && (
+              <p className="text-xs text-muted-foreground">
+                {paymentTerms.find(t => t.id.toString() === paymentTermId)?.description}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

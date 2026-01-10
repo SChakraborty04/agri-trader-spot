@@ -56,9 +56,25 @@ export interface QuotationRequest {
   offer_price?: number;
   delivery_date?: string;
   delivery_location?: string;
-  payment_terms?: string;
+  payment_terms?: number; // Changed to number (ID from master_payment_terms)
   valid_until?: string;
   notes?: string;
+}
+
+// Payment Terms types
+export interface PaymentTerm {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+// Fetch payment terms from API
+export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
+  const res = await fetchWithFallback(`/vboxtrade/payment-terms`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch payment terms");
+  }
+  return res.json();
 }
 
 export interface QuotationResponse {
