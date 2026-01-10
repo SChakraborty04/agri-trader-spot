@@ -1,25 +1,38 @@
 import { CheckCircle2 } from "lucide-react";
-import { Quote } from "@/lib/mockData";
 
 interface OrderTrackingProgressProps {
-  status: Quote["status"];
+  status: string;
 }
 
 const OrderTrackingProgress = ({ status }: OrderTrackingProgressProps) => {
   const steps = [
-    { key: "Accepted", label: "Ordered" },
-    { key: "Packaging", label: "Packaging" },
-    { key: "Loading", label: "Loading" },
-    { key: "Paid", label: "Paid" },
-    { key: "Shipped", label: "Shipped" },
+    { key: "pending", label: "Pending" },
+    { key: "confirmed", label: "Confirmed" },
+    { key: "processing", label: "Processing" },
+    { key: "ready_to_ship", label: "Ready" },
+    { key: "shipped", label: "Shipped" },
+    { key: "delivered", label: "Delivered" },
   ];
 
-  const getStepIndex = (currentStatus: Quote["status"]) => {
-    const statusOrder = ["Accepted", "Packaging", "Loading", "Paid", "Shipped", "Closed"];
-    return statusOrder.indexOf(currentStatus);
+  const getStepIndex = (currentStatus: string) => {
+    const statusLower = currentStatus.toLowerCase().replace(/\s+/g, "_");
+    const index = steps.findIndex(step => step.key === statusLower);
+    return index >= 0 ? index : 0;
   };
 
   const currentStepIndex = getStepIndex(status);
+  const isCancelled = status.toLowerCase().includes("cancel");
+
+  if (isCancelled) {
+    return (
+      <div className="py-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+          <span className="text-destructive text-lg">✕</span>
+        </div>
+        <p className="text-sm text-destructive font-medium">Order Cancelled</p>
+      </div>
+    );
+  }
 
   return (
     <div className="py-6">
