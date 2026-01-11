@@ -1,16 +1,18 @@
-import { ArrowLeft, Package, MapPin, Calendar, Clock, Truck, CheckCircle2, AlertCircle, RefreshCw, LogIn } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Calendar, Clock, Truck, CheckCircle2, AlertCircle, RefreshCw, LogIn, Loader2, Store, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MobileDock } from "@/components/MobileDock";
 import { AuthWidget } from "@/components/AuthWidget";
 import OrderTrackingProgress from "@/components/OrderTrackingProgress";
 import { useState, useEffect, useCallback } from "react";
-import { fetchOrders, fetchOrderDetail, getAuthToken, OrderResponse, OrderDetailResponse } from "@/lib/api";
+import { fetchOrders, fetchOrderDetail, updateOrderStatus, getAuthToken, OrderResponse, OrderDetailResponse } from "@/lib/api";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 const getStatusColor = (status: string) => {
   const statusLower = status.toLowerCase();
@@ -58,12 +60,38 @@ const formatTime = (dateString: string) => {
   }
 };
 
+// Status IDs for order status transitions (from trade_status_master)
+const ORDER_STATUS_IDS: Record<string, number> = {
+  confirmed: 2,
+  processing: 3,
+  ready_to_ship: 4,
+  shipped: 5,
+  delivered: 6,
+  cancelled: 7,
+};
+
+// Get next possible status for seller
+const getNextStatusForSeller = (currentStatus: string): { statusId: number; label: string } | null => {
+  const status = currentStatus.toLowerCase();
+  if (status.includes("pending")) return { statusId: ORDER_STATUS_IDS.confirmed, label: "Confirm Order" };
+  if (status.includes("confirmed")) return { statusId: ORDER_STATUS_IDS.processing, label: "Start Processing" };
+  if (status.includes("processing")) return { statusId: ORDER_STATUS_IDS.ready_to_ship, label: "Mark Ready to Ship" };
+  if (status.includes("ready")) return { statusId: ORDER_STATUS_IDS.shipped, label: "Mark as Shipped" };
+  if (status.includes("shipped") || status.includes("transit")) return { statusId: ORDER_STATUS_IDS.delivered, label: "Mark Delivered" };
+  return null;
+};
+
 const OrderTracking = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetailResponse | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [role, setRole] = useState<"buyer" | "seller">("buyer");
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [statusComment, setStatusComment] = useState("");
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ orderId: number; statusId: number; label: string } | null>(null);
   const isLoggedIn = !!getAuthToken();
 
   const loadOrders = useCallback(async () => {
@@ -74,7 +102,7 @@ const OrderTracking = () => {
 
     try {
       setLoading(true);
-      const response = await fetchOrders("buyer", 50, 0);
+      const response = await fetchOrders(role, 50, 0);
       setOrders(response.orders);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -82,7 +110,7 @@ const OrderTracking = () => {
     } finally {
       setLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, role]);
 
   useEffect(() => {
     loadOrders();
@@ -98,6 +126,44 @@ const OrderTracking = () => {
       toast.error("Failed to load order details");
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = (order: OrderResponse) => {
+    const nextStatus = getNextStatusForSeller(order.order_status);
+    if (nextStatus) {
+      setPendingStatusUpdate({ orderId: order.order_id, ...nextStatus });
+      setStatusComment("");
+      setShowStatusDialog(true);
+    }
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!pendingStatusUpdate) return;
+
+    try {
+      setStatusUpdateLoading(true);
+      await updateOrderStatus(
+        pendingStatusUpdate.orderId,
+        pendingStatusUpdate.statusId,
+        statusComment || undefined
+      );
+      toast.success("Order status updated successfully");
+      setShowStatusDialog(false);
+      setPendingStatusUpdate(null);
+      setStatusComment("");
+      
+      // Refresh orders and detail
+      loadOrders();
+      if (selectedOrder && selectedOrder.order_id === pendingStatusUpdate.orderId) {
+        const updatedDetail = await fetchOrderDetail(pendingStatusUpdate.orderId);
+        setSelectedOrder(updatedDetail);
+      }
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast.error(error?.message || "Failed to update order status");
+    } finally {
+      setStatusUpdateLoading(false);
     }
   };
 
@@ -134,7 +200,7 @@ const OrderTracking = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -149,8 +215,23 @@ const OrderTracking = () => {
               <AuthWidget />
             </div>
           </div>
+          
+          {/* Role Toggle */}
+          <Tabs value={role} onValueChange={(v) => setRole(v as "buyer" | "seller")}>
+            <TabsList className="grid w-full grid-cols-2 max-w-xs">
+              <TabsTrigger value="buyer" className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4" />
+                My Purchases
+              </TabsTrigger>
+              <TabsTrigger value="seller" className="flex items-center gap-2">
+                <Store className="w-4 h-4" />
+                My Sales
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </header>
+
 
       <main className="container mx-auto px-4 py-6 pb-dock">
         {loading ? (
@@ -268,15 +349,26 @@ const OrderTracking = () => {
                       </div>
                     </div>
 
-                    {/* View Details Button */}
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleViewOrder(order)}
-                      disabled={detailLoading}
-                    >
-                      View Tracking
-                    </Button>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleViewOrder(order)}
+                        disabled={detailLoading}
+                      >
+                        View Tracking
+                      </Button>
+                      {role === "seller" && getNextStatusForSeller(order.order_status) && (
+                        <Button
+                          className="flex-1"
+                          onClick={() => handleStatusUpdate(order)}
+                          disabled={statusUpdateLoading}
+                        >
+                          {getNextStatusForSeller(order.order_status)?.label}
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -445,12 +537,79 @@ const OrderTracking = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <Button className="flex-1" onClick={() => setSelectedOrder(null)}>
+                {role === "seller" && getNextStatusForSeller(selectedOrder.order_status) && (
+                  <Button
+                    variant="default"
+                    className="flex-1"
+                    onClick={() => {
+                      const nextStatus = getNextStatusForSeller(selectedOrder.order_status);
+                      if (nextStatus) {
+                        setPendingStatusUpdate({ orderId: selectedOrder.order_id, ...nextStatus });
+                        setStatusComment("");
+                        setShowStatusDialog(true);
+                      }
+                    }}
+                    disabled={statusUpdateLoading}
+                  >
+                    {getNextStatusForSeller(selectedOrder.order_status)?.label}
+                  </Button>
+                )}
+                <Button variant="outline" className="flex-1" onClick={() => setSelectedOrder(null)}>
                   Close
                 </Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Update Confirmation Dialog */}
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Order Status</DialogTitle>
+            <DialogDescription>
+              {pendingStatusUpdate?.label ? `You are about to: ${pendingStatusUpdate.label}` : "Update the order status"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Add a comment (optional)</label>
+              <Textarea
+                value={statusComment}
+                onChange={(e) => setStatusComment(e.target.value)}
+                placeholder="E.g., Order shipped via courier, tracking #12345..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowStatusDialog(false);
+                setPendingStatusUpdate(null);
+              }}
+              disabled={statusUpdateLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={confirmStatusUpdate}
+              disabled={statusUpdateLoading}
+            >
+              {statusUpdateLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Confirm"
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
