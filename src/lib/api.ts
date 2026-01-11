@@ -62,6 +62,16 @@ export interface QuotationRequest {
 }
 
 // Payment Terms types
+export interface PaymentTermRaw {
+  termid?: number;
+  term_id?: number;
+  id?: number;
+  termname?: string;
+  term_name?: string;
+  name?: string;
+  description?: string;
+}
+
 export interface PaymentTerm {
   id: number;
   name: string;
@@ -74,7 +84,14 @@ export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
   if (!res.ok) {
     throw new Error("Failed to fetch payment terms");
   }
-  return res.json();
+  const data: PaymentTermRaw[] = await res.json();
+  
+  // Normalize the response to a consistent format
+  return data.map((term) => ({
+    id: term.termid ?? term.term_id ?? term.id ?? 0,
+    name: term.termname ?? term.term_name ?? term.name ?? "Unknown",
+    description: term.description,
+  }));
 }
 
 export interface QuotationResponse {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, MapPin, Calendar, Clock, RefreshCw, User, Building2, CreditCard, FileText } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Calendar, Clock, RefreshCw, User, Building2, CreditCard, FileText, ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { AuthWidget } from "@/components/AuthWidget";
 import { MobileDock } from "@/components/MobileDock";
-import { fetchQuotations, QuotationResponse, getAuthToken } from "@/lib/api";
+import { fetchQuotations, QuotationResponse, getAuthToken, createOrder } from "@/lib/api";
 import { toast } from "sonner";
 
 const getStatusColor = (status: QuotationResponse["status"]) => {
@@ -105,6 +105,7 @@ const QuoteDetail = () => {
   const [quote, setQuote] = useState<QuotationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const loadQuote = async () => {
     const token = getAuthToken();
@@ -136,6 +137,24 @@ const QuoteDetail = () => {
   }, [quoteNo]);
 
   const isLoggedIn = !!getAuthToken();
+
+  const handleConvertToOrder = async () => {
+    if (!quote) return;
+    
+    try {
+      setCreatingOrder(true);
+      const order = await createOrder({
+        quotation_id: parseInt(quote.id),
+        currency: quote.currency,
+      });
+      toast.success(`Order ${order.order_number} created successfully!`);
+      navigate("/order-tracking");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create order");
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
 
   if (!isLoggedIn) {
     return (
@@ -297,6 +316,44 @@ const QuoteDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Convert to Order Button for Accepted Quotes */}
+        {quote.status === "accepted" && (
+          <Card className="rounded-2xl border-green-500/30 bg-green-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <ShoppingCart className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-green-600">Quote Accepted!</p>
+                    <p className="text-sm text-muted-foreground">
+                      Convert this quotation to an order to proceed with the purchase.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleConvertToOrder}
+                  disabled={creatingOrder}
+                  className="rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {creatingOrder ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Convert to Order
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quote Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
