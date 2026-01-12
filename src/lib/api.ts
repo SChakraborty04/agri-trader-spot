@@ -80,7 +80,7 @@ export interface PaymentTerm {
 
 // Fetch payment terms from API
 export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
-  const res = await fetchWithFallback(`/vboxtrade/payment-terms`);
+  const res = await fetchWithFallback(`/vboxtrade/master/payment-terms`);
   if (!res.ok) {
     throw new Error("Failed to fetch payment terms");
   }
@@ -217,6 +217,7 @@ export async function resendOtp(email: string): Promise<RegisterResponse> {
   if (!res.ok) throw new Error("Resend OTP failed");
   return res.json();
 }
+
 
 export async function getProfile(): Promise<AuthUser> {
   const token = getAuthToken();
