@@ -317,26 +317,30 @@ const QuoteDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Convert to Order Button for Accepted Quotes */}
-        {quote.status === "accepted" && (
-          <Card className="rounded-2xl border-green-500/30 bg-green-500/5">
+        {/* Convert to Order Button for Pending or Accepted Quotes */}
+        {(quote.status === "pending" || quote.status === "accepted") && (
+          <Card className={`rounded-2xl ${quote.status === "accepted" ? "border-green-500/30 bg-green-500/5" : "border-primary/30 bg-primary/5"}`}>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <ShoppingCart className="w-5 h-5 text-green-600" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${quote.status === "accepted" ? "bg-green-500/10" : "bg-primary/10"}`}>
+                    <ShoppingCart className={`w-5 h-5 ${quote.status === "accepted" ? "text-green-600" : "text-primary"}`} />
                   </div>
                   <div>
-                    <p className="font-semibold text-green-600">Quote Accepted!</p>
+                    <p className={`font-semibold ${quote.status === "accepted" ? "text-green-600" : "text-primary"}`}>
+                      {quote.status === "accepted" ? "Quote Accepted!" : "Ready to Order"}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      Convert this quotation to an order to proceed with the purchase.
+                      {quote.status === "accepted" 
+                        ? "Convert this quotation to an order to proceed with the purchase."
+                        : "Convert this pending quote to an order. The order will also be in pending status."}
                     </p>
                   </div>
                 </div>
                 <Button
                   onClick={handleConvertToOrder}
                   disabled={creatingOrder}
-                  className="rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                  className={`rounded-xl text-white ${quote.status === "accepted" ? "bg-green-600 hover:bg-green-700" : "bg-primary hover:bg-primary/90"}`}
                 >
                   {creatingOrder ? (
                     <>

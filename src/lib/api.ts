@@ -80,11 +80,22 @@ export interface PaymentTerm {
 
 // Fetch payment terms from API
 export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
-  const res = await fetchWithFallback(`/vboxtrade/master/payment-terms`);
+  // Try the updated endpoint first, then fallback to master endpoint
+  let res: Response;
+  try {
+    res = await fetchWithFallback(`/vboxtrade/payment-terms`);
+  } catch {
+    res = await fetchWithFallback(`/vboxtrade/master/payment-terms`);
+  }
+  
   if (!res.ok) {
     throw new Error("Failed to fetch payment terms");
   }
-  const data: PaymentTermRaw[] = await res.json();
+  
+  const rawData = await res.json();
+  
+  // Handle both array and object with terms property
+  const data: PaymentTermRaw[] = Array.isArray(rawData) ? rawData : (rawData.terms || rawData.data || []);
   
   // Normalize the response to a consistent format
   return data.map((term) => ({
