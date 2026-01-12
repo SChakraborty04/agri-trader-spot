@@ -61,14 +61,17 @@ export interface QuotationRequest {
   notes?: string;
 }
 
-// Payment Terms types
+// Payment Terms types - support all possible field name variations
 export interface PaymentTermRaw {
   termid?: number;
   term_id?: number;
   id?: number;
+  payment_term_id?: number;
   termname?: string;
   term_name?: string;
   name?: string;
+  payment_term_name?: string;
+  payment_term_code?: string;
   description?: string;
 }
 
@@ -80,10 +83,11 @@ export interface PaymentTerm {
 
 // Fetch payment terms from API
 export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
-  // Try the updated endpoint first, then fallback to master endpoint
+  // Try /vboxtrade/payment-terms first, fallback to /vboxtrade/master/payment-terms
   let res: Response;
   try {
     res = await fetchWithFallback(`/vboxtrade/payment-terms`);
+    if (!res.ok) throw new Error("Not found");
   } catch {
     res = await fetchWithFallback(`/vboxtrade/master/payment-terms`);
   }
@@ -97,10 +101,10 @@ export async function fetchPaymentTerms(): Promise<PaymentTerm[]> {
   // Handle both array and object with terms property
   const data: PaymentTermRaw[] = Array.isArray(rawData) ? rawData : (rawData.terms || rawData.data || []);
   
-  // Normalize the response to a consistent format
+  // Normalize the response to a consistent format - check all possible field names
   return data.map((term) => ({
-    id: term.termid ?? term.term_id ?? term.id ?? 0,
-    name: term.termname ?? term.term_name ?? term.name ?? "Unknown",
+    id: term.payment_term_id ?? term.termid ?? term.term_id ?? term.id ?? 0,
+    name: term.payment_term_name ?? term.termname ?? term.term_name ?? term.name ?? "Unknown",
     description: term.description,
   }));
 }
