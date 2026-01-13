@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MobileDock } from "@/components/MobileDock";
 import { AuthWidget } from "@/components/AuthWidget";
+import { ApiDebugDrawer } from "@/components/ApiDebugDrawer";
 import OrderTrackingProgress from "@/components/OrderTrackingProgress";
 import { useState, useEffect, useCallback } from "react";
 import { fetchOrders, fetchOrderDetail, updateOrderStatus, getAuthToken, OrderResponse, OrderDetailResponse } from "@/lib/api";
@@ -613,6 +614,7 @@ const OrderTracking = () => {
         </DialogContent>
       </Dialog>
 
+      <ApiDebugDrawer />
       <MobileDock />
     </div>
   );

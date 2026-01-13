@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { AuthWidget } from "@/components/AuthWidget";
 import { MobileDock } from "@/components/MobileDock";
+import { ApiDebugDrawer } from "@/components/ApiDebugDrawer";
 import { fetchQuotations, QuotationResponse, getAuthToken, createOrder } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -534,6 +535,7 @@ const QuoteDetail = () => {
         </Card>
       </main>
 
+      <ApiDebugDrawer />
       <MobileDock />
     </div>
   );

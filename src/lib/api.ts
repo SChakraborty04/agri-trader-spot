@@ -2,6 +2,8 @@
 const API_PRIMARY = import.meta.env.VITE_API_PRIMARY ?? "https://api3.boxfarming.in";
 const API_FALLBACK = import.meta.env.VITE_API_FALLBACK ?? "https://v-box-backend.vercel.app";
 
+import { addDebugEntry, ApiDebugEntry } from "@/hooks/useApiDebug";
+
 export interface MarketChipAPI {
   id: string;
   commodity: string;
@@ -160,45 +162,66 @@ export function clearAuthToken() {
 async function fetchWithFallback(path: string, options?: RequestInit): Promise<Response> {
   const urlPrimary = `${API_PRIMARY}${path.startsWith("/") ? path : `/${path}`}`;
   const urlFallback = `${API_FALLBACK}${path.startsWith("/") ? path : `/${path}`}`;
+  const method = options?.method || "GET";
 
-  let primaryDiag = "(not attempted)";
+  const debugEntry: ApiDebugEntry = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: new Date(),
+    path,
+    method,
+    primary: { url: urlPrimary },
+    success: false,
+  };
 
   // Try primary
   try {
     const res = await fetch(urlPrimary, options);
-    if (res.ok) return res;
+    const body = await res.clone().text().catch(() => "");
+    
+    debugEntry.primary.status = res.status;
+    debugEntry.primary.statusText = res.statusText;
+    debugEntry.primary.body = body;
 
-    const body = await res
-      .clone()
-      .text()
-      .catch(() => "");
-    primaryDiag = `${res.status} ${res.statusText}${body ? ` | ${body.slice(0, 400)}` : ""}`;
+    if (res.ok) {
+      debugEntry.success = true;
+      addDebugEntry(debugEntry);
+      return res;
+    }
   } catch (e) {
-    primaryDiag = `network error: ${e instanceof Error ? e.message : String(e)}`;
+    debugEntry.primary.error = e instanceof Error ? e.message : String(e);
   }
 
   // Fallback
+  debugEntry.fallback = { url: urlFallback };
+
   let res2: Response;
   try {
     res2 = await fetch(urlFallback, options);
   } catch (e) {
+    debugEntry.fallback.error = e instanceof Error ? e.message : String(e);
+    addDebugEntry(debugEntry);
     throw new Error(
       `Request failed for ${path}\n` +
-        `Primary: ${urlPrimary} -> ${primaryDiag}\n` +
-        `Fallback: ${urlFallback} -> network error: ${e instanceof Error ? e.message : String(e)}`
+        `Primary: ${urlPrimary} -> ${debugEntry.primary.error || `${debugEntry.primary.status} ${debugEntry.primary.statusText}`}\n` +
+        `Fallback: ${urlFallback} -> network error: ${debugEntry.fallback.error}`
     );
   }
 
-  if (res2.ok) return res2;
+  const body2 = await res2.clone().text().catch(() => "");
+  debugEntry.fallback.status = res2.status;
+  debugEntry.fallback.statusText = res2.statusText;
+  debugEntry.fallback.body = body2;
 
-  const body2 = await res2
-    .clone()
-    .text()
-    .catch(() => "");
+  if (res2.ok) {
+    debugEntry.success = true;
+    addDebugEntry(debugEntry);
+    return res2;
+  }
 
+  addDebugEntry(debugEntry);
   throw new Error(
     `Request failed for ${path}\n` +
-      `Primary: ${urlPrimary} -> ${primaryDiag}\n` +
+      `Primary: ${urlPrimary} -> ${debugEntry.primary.error || `${debugEntry.primary.status} ${debugEntry.primary.statusText}`}\n` +
       `Fallback: ${urlFallback} -> ${res2.status} ${res2.statusText}${body2 ? ` | ${body2.slice(0, 400)}` : ""}`
   );
 }
