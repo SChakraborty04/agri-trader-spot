@@ -92,7 +92,7 @@ const Home = () => {
     e.stopPropagation();
     const token = getAuthToken();
     if (!token) {
-      openLoginDialog();
+      openLoginDialog(offer);
       return;
     }
     setSelectedOffer(offer);

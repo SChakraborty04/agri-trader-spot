@@ -31,7 +31,7 @@ export const FPOCard = ({ offer }: FPOCardProps) => {
   const handleRequestQuote = () => {
     const token = getAuthToken();
     if (!token) {
-      openLoginDialog();
+      openLoginDialog(offer);
       return;
     }
     setDialogOpen(true);

@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { register, verifyOtp, resendOtp, getProfile, getAuthToken, clearAuthToken, AuthUser } from "@/lib/api";
+import { register, verifyOtp, resendOtp, getProfile, getAuthToken, clearAuthToken, AuthUser, FPOOfferAPI } from "@/lib/api";
 import { User, LogOut, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { getAuthDialogState, subscribeAuthDialog, closeAuthDialog } from "@/hooks/useAuthDialog";
+import { getAuthDialogState, subscribeAuthDialog, closeAuthDialog, getPendingOffer, clearPendingOffer } from "@/hooks/useAuthDialog";
+import { QuoteFormDialog } from "./QuoteFormDialog";
 
 type AuthMode = "login" | "register";
 type AuthStep = "idle" | "form" | "otp";
 
 export function AuthWidget() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [mode, setMode] = useState<AuthMode>("login");
   const [step, setStep] = useState<AuthStep>("idle");
@@ -21,6 +23,10 @@ export function AuthWidget() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  
+  // Quote form state for post-login flow
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [pendingQuoteOffer, setPendingQuoteOffer] = useState<FPOOfferAPI | null>(null);
 
   // Subscribe to global auth dialog state
   const externalState = useSyncExternalStore(subscribeAuthDialog, getAuthDialogState);
@@ -81,6 +87,16 @@ export function AuthWidget() {
       if (res.user) {
         setUser(res.user);
         toast.success("Logged in successfully");
+        
+        // Check for pending offer and open quote dialog
+        const offer = getPendingOffer();
+        if (offer) {
+          setPendingQuoteOffer(offer);
+          clearPendingOffer();
+          // Small delay to ensure auth state is updated
+          setTimeout(() => setQuoteDialogOpen(true), 100);
+        }
+        
         resetForm();
       }
     } catch (err: any) {
@@ -114,7 +130,7 @@ export function AuthWidget() {
     setName("");
     setPhone("");
     setOtp("");
-    closeAuthDialog(); // Close global state too
+    closeAuthDialog();
   };
 
   const openDialog = (authMode: AuthMode) => {
@@ -122,29 +138,45 @@ export function AuthWidget() {
     setStep("form");
   };
 
-  const navigate = useNavigate();
-
   if (user) {
     return (
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/profile")}
-          className="rounded-xl h-9 px-3"
-        >
-          <User className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">{user.name}</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleLogout}
-          className="h-9 w-9 rounded-xl"
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </div>
+      <>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/profile")}
+            className="rounded-xl h-9 px-3"
+          >
+            <User className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">{user.name}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="h-9 w-9 rounded-xl"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Quote dialog for post-login flow */}
+        {pendingQuoteOffer && (
+          <QuoteFormDialog
+            open={quoteDialogOpen}
+            onOpenChange={(open) => {
+              setQuoteDialogOpen(open);
+              if (!open) setPendingQuoteOffer(null);
+            }}
+            offer={pendingQuoteOffer}
+            onQuoteGenerated={() => {
+              setQuoteDialogOpen(false);
+              setPendingQuoteOffer(null);
+            }}
+          />
+        )}
+      </>
     );
   }
 
