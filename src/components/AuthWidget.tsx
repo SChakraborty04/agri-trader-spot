@@ -100,7 +100,13 @@ export function AuthWidget() {
         resetForm();
       }
     } catch (err: any) {
-      toast.error("Invalid OTP. Please check and try again.");
+      // Show more specific error message from backend
+      const errorMessage = err?.message || "Verification failed";
+      if (errorMessage.includes("buyer_id") || errorMessage.includes("User object")) {
+        toast.error("Backend error: Please contact support. The server encountered an issue.");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
