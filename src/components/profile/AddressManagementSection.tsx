@@ -18,15 +18,15 @@ interface AddressManagementSectionProps {
 }
 
 const ADDRESS_TYPE_ICONS = {
-  business: Building2,
-  warehouse: Warehouse,
-  other: MoreHorizontal,
+  Business: Building2,
+  Warehouse: Warehouse,
+  Other: MoreHorizontal,
 };
 
 const ADDRESS_TYPE_LABELS = {
-  business: "Business",
-  warehouse: "Warehouse",
-  other: "Other",
+  Business: "Business",
+  Warehouse: "Warehouse",
+  Other: "Other",
 };
 
 const INDIAN_STATES = [
@@ -46,7 +46,7 @@ export function AddressManagementSection({
 }: AddressManagementSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<Omit<Address, "id">>({
-    type: "business",
+    type: "Business",
     addressLine1: "",
     addressLine2: "",
     city: "",
@@ -95,7 +95,7 @@ export function AddressManagementSection({
 
     if (result) {
       setFormData({
-        type: "business",
+        type: "Business",
         addressLine1: "",
         addressLine2: "",
         city: "",
@@ -200,9 +200,9 @@ export function AddressManagementSection({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="warehouse">Warehouse</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                  <SelectItem value="Warehouse">Warehouse</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -316,7 +316,7 @@ interface AddressCardProps {
 }
 
 function AddressCard({ address, onSetDefault, onDelete }: AddressCardProps) {
-  const Icon = ADDRESS_TYPE_ICONS[address.type];
+  const Icon = ADDRESS_TYPE_ICONS[address.type] || MoreHorizontal;
   
   return (
     <div
@@ -340,7 +340,7 @@ function AddressCard({ address, onSetDefault, onDelete }: AddressCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-muted-foreground mb-1">
-            {ADDRESS_TYPE_LABELS[address.type]}
+            {ADDRESS_TYPE_LABELS[address.type] || address.type}
           </p>
           <p className="text-sm font-medium">
             {address.addressLine1}
