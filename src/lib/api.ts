@@ -543,25 +543,34 @@ export async function recordOrderPayment(
 export interface PersonalProfileAPI {
   first_name: string;
   last_name: string;
-  display_name: string;
-  date_of_birth: string | null;
-  gender: "male" | "female" | null;
-  profile_picture: string | null;
+  date_of_birth?: string | null;
+  gender?: number | null; // 0 = Male, 1 = Female
+}
+
+export interface PersonalProfileResponse extends PersonalProfileAPI {
+  display_name?: string;
+  profile_picture?: string | null;
+  status?: number;
+  buyer_id?: number | null;
 }
 
 export interface BusinessProfileAPI {
-  id?: number;
-  business_name: string;
-  legal_business_name: string;
-  contact_person_name: string;
-  contact_phone_number: string;
+  buyer_name: string;
+  buyer_legal_name: string;
+  contact_name: string;
+  contact_number: string;
+}
+
+export interface BusinessProfileResponse extends BusinessProfileAPI {
+  buyer_id?: number;
+  kyc_status?: number;
 }
 
 export interface AddressAPI {
-  id: number;
-  address_type: "business" | "warehouse" | "other";
-  address_line_1: string;
-  address_line_2: string | null;
+  address_id?: number;
+  address_type: string; // "Business" | "Warehouse" | "Other"
+  address_line1: string;
+  address_line2?: string | null;
   city: string;
   state: string;
   pincode: string;
@@ -569,38 +578,39 @@ export interface AddressAPI {
   is_default: boolean;
 }
 
-export interface KYCDetailsAPI {
-  pan_number: string;
-  pan_file: string | null;
-  gstin_number: string | null;
-  gstin_file: string | null;
+export interface AddressResponse extends AddressAPI {
+  address_id: number;
+  buyer_id: number;
+  created_at?: string;
 }
 
 export interface FullProfileResponse {
-  personal: PersonalProfileAPI | null;
-  business: BusinessProfileAPI | null;
-  addresses: AddressAPI[];
-  kyc: KYCDetailsAPI | null;
+  personal: PersonalProfileResponse | null;
+  business: BusinessProfileResponse | null;
+  addresses: AddressResponse[];
 }
 
-// Fetch full profile data
-export async function fetchFullProfile(): Promise<FullProfileResponse> {
+// Fetch profile details
+export async function fetchProfileDetails(): Promise<PersonalProfileResponse> {
   const token = getAuthToken();
   if (!token) throw new Error("Please login to view profile");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/profile`, {
+  const res = await fetchWithFallback(`/vboxtrade/profile/details`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    // Return empty defaults if profile doesn't exist yet
     if (res.status === 404) {
       return {
-        personal: null,
-        business: null,
-        addresses: [],
-        kyc: null,
+        first_name: "",
+        last_name: "",
+        date_of_birth: null,
+        gender: null,
+        display_name: "",
+        profile_picture: null,
+        status: 0,
+        buyer_id: null,
       };
     }
     const error = await res.json().catch(() => ({ detail: "Failed to fetch profile" }));
@@ -611,11 +621,11 @@ export async function fetchFullProfile(): Promise<FullProfileResponse> {
 }
 
 // Update personal profile
-export async function updatePersonalProfile(data: PersonalProfileAPI): Promise<PersonalProfileAPI> {
+export async function updatePersonalProfile(data: PersonalProfileAPI): Promise<PersonalProfileResponse> {
   const token = getAuthToken();
   if (!token) throw new Error("Please login to update profile");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/profile/personal`, {
+  const res = await fetchWithFallback(`/vboxtrade/profile/update`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -625,20 +635,61 @@ export async function updatePersonalProfile(data: PersonalProfileAPI): Promise<P
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to update personal profile" }));
-    throw new Error(error.detail || "Failed to update personal profile");
+    const error = await res.json().catch(() => ({ detail: "Failed to update profile" }));
+    throw new Error(error.detail || "Failed to update profile");
   }
 
   return res.json();
 }
 
-// Update/Create business profile
-export async function updateBusinessProfile(data: BusinessProfileAPI): Promise<BusinessProfileAPI> {
+// Upload profile picture
+export async function uploadProfilePicture(file: File): Promise<{ profile_image_url: string }> {
   const token = getAuthToken();
-  if (!token) throw new Error("Please login to update profile");
+  if (!token) throw new Error("Please login to upload picture");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/profile/business`, {
-    method: "PUT",
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetchWithFallback(`/vboxtrade/profile/upload-picture`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to upload picture" }));
+    throw new Error(error.detail || "Failed to upload picture");
+  }
+
+  return res.json();
+}
+
+// Get buyer profile
+export async function fetchBuyerProfile(): Promise<BusinessProfileResponse | null> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to view buyer profile");
+
+  const res = await fetchWithFallback(`/vboxtrade/profile/buyer`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    const error = await res.json().catch(() => ({ detail: "Failed to fetch buyer profile" }));
+    throw new Error(error.detail || "Failed to fetch buyer profile");
+  }
+
+  return res.json();
+}
+
+// Create buyer profile
+export async function createBuyerProfile(data: BusinessProfileAPI): Promise<BusinessProfileResponse> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to create buyer profile");
+
+  const res = await fetchWithFallback(`/vboxtrade/profile/buyer`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -647,19 +698,19 @@ export async function updateBusinessProfile(data: BusinessProfileAPI): Promise<B
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to update business profile" }));
-    throw new Error(error.detail || "Failed to update business profile");
+    const error = await res.json().catch(() => ({ detail: "Failed to create buyer profile" }));
+    throw new Error(error.detail || "Failed to create buyer profile");
   }
 
   return res.json();
 }
 
 // Fetch addresses
-export async function fetchAddresses(): Promise<AddressAPI[]> {
+export async function fetchAddresses(): Promise<AddressResponse[]> {
   const token = getAuthToken();
   if (!token) throw new Error("Please login to view addresses");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/addresses`, {
+  const res = await fetchWithFallback(`/vboxtrade/profile/addresses`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -675,11 +726,11 @@ export async function fetchAddresses(): Promise<AddressAPI[]> {
 }
 
 // Add new address
-export async function createAddress(data: Omit<AddressAPI, "id">): Promise<AddressAPI> {
+export async function createAddress(data: Omit<AddressAPI, "address_id">): Promise<AddressResponse> {
   const token = getAuthToken();
   if (!token) throw new Error("Please login to add address");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/addresses`, {
+  const res = await fetchWithFallback(`/vboxtrade/profile/address`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -696,62 +747,29 @@ export async function createAddress(data: Omit<AddressAPI, "id">): Promise<Addre
   return res.json();
 }
 
-// Update existing address
-export async function updateAddressAPI(id: number, data: Partial<AddressAPI>): Promise<AddressAPI> {
+// Fetch full profile (combined call)
+export async function fetchFullProfile(): Promise<FullProfileResponse> {
   const token = getAuthToken();
-  if (!token) throw new Error("Please login to update address");
+  if (!token) throw new Error("Please login to view profile");
 
-  const res = await fetchWithFallback(`/vboxtrade/buyer/addresses/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+  try {
+    // Fetch all profile data in parallel
+    const [personal, business, addresses] = await Promise.all([
+      fetchProfileDetails().catch(() => null),
+      fetchBuyerProfile().catch(() => null),
+      fetchAddresses().catch(() => []),
+    ]);
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to update address" }));
-    throw new Error(error.detail || "Failed to update address");
+    return {
+      personal,
+      business,
+      addresses,
+    };
+  } catch (error) {
+    return {
+      personal: null,
+      business: null,
+      addresses: [],
+    };
   }
-
-  return res.json();
-}
-
-// Delete address
-export async function deleteAddressAPI(id: number): Promise<void> {
-  const token = getAuthToken();
-  if (!token) throw new Error("Please login to delete address");
-
-  const res = await fetchWithFallback(`/vboxtrade/buyer/addresses/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to delete address" }));
-    throw new Error(error.detail || "Failed to delete address");
-  }
-}
-
-// Update KYC details
-export async function updateKYCDetails(data: KYCDetailsAPI): Promise<KYCDetailsAPI> {
-  const token = getAuthToken();
-  if (!token) throw new Error("Please login to update KYC");
-
-  const res = await fetchWithFallback(`/vboxtrade/buyer/profile/kyc`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to update KYC details" }));
-    throw new Error(error.detail || "Failed to update KYC details");
-  }
-
-  return res.json();
 }

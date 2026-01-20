@@ -16,12 +16,14 @@ import { cn } from "@/lib/utils";
 interface PersonalProfileSectionProps {
   profile: PersonalProfile;
   onSave: (profile: PersonalProfile) => Promise<boolean>;
+  onUploadPicture?: (file: File) => Promise<string | null>;
 }
 
-export function PersonalProfileSection({ profile, onSave }: PersonalProfileSectionProps) {
+export function PersonalProfileSection({ profile, onSave, onUploadPicture }: PersonalProfileSectionProps) {
   const [formData, setFormData] = useState<PersonalProfile>(profile);
   const [errors, setErrors] = useState<Partial<Record<keyof PersonalProfile, string>>>({});
   const [isDirty, setIsDirty] = useState(false);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function PersonalProfileSection({ profile, onSave }: PersonalProfileSecti
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -62,13 +64,26 @@ export function PersonalProfileSection({ profile, onSave }: PersonalProfileSecti
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setFormData(prev => ({ ...prev, profilePicture: result }));
-      setIsDirty(true);
-    };
-    reader.readAsDataURL(file);
+    // If we have an upload function, use it to upload to server
+    if (onUploadPicture) {
+      setUploadingPicture(true);
+      const imageUrl = await onUploadPicture(file);
+      setUploadingPicture(false);
+      
+      if (imageUrl) {
+        setFormData(prev => ({ ...prev, profilePicture: imageUrl }));
+        toast.success("Profile picture uploaded successfully");
+      }
+    } else {
+      // Fallback to local preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setFormData(prev => ({ ...prev, profilePicture: result }));
+        setIsDirty(true);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validate = (): boolean => {
@@ -135,9 +150,14 @@ export function PersonalProfileSection({ profile, onSave }: PersonalProfileSecti
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+              disabled={uploadingPicture}
+              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              <Camera className="w-4 h-4" />
+              {uploadingPicture ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
             </button>
             <input
               ref={fileInputRef}

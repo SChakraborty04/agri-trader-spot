@@ -6,15 +6,14 @@ import { AuthWidget } from "@/components/AuthWidget";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Building2, MapPin, FileCheck2, LogOut, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Building2, MapPin, LogOut, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useProfileData } from "@/hooks/useProfileData";
 import { PersonalProfileSection } from "@/components/profile/PersonalProfileSection";
 import { BusinessProfileSection } from "@/components/profile/BusinessProfileSection";
 import { AddressManagementSection } from "@/components/profile/AddressManagementSection";
-import { KYCDetailsSection } from "@/components/profile/KYCDetailsSection";
 
-type ProfileTab = "personal" | "business" | "addresses" | "kyc";
+type ProfileTab = "personal" | "business" | "addresses";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -25,14 +24,13 @@ export default function Profile() {
     personalProfile,
     businessProfile,
     addresses,
-    kycDetails,
     loading: dataLoading,
     savePersonalProfile,
+    uploadPicture,
     saveBusinessProfile,
     addAddress,
     updateAddress,
     deleteAddress,
-    saveKycDetails,
   } = useProfileData();
 
   useEffect(() => {
@@ -54,13 +52,11 @@ export default function Profile() {
   const isPersonalComplete = Boolean(personalProfile.firstName && personalProfile.lastName);
   const isBusinessComplete = Boolean(businessProfile);
   const hasAddresses = addresses.length > 0;
-  const isKycComplete = Boolean(kycDetails.panNumber);
 
   const completionSteps = [
     { id: "personal", label: "Personal", complete: isPersonalComplete },
     { id: "business", label: "Business", complete: isBusinessComplete },
     { id: "addresses", label: "Addresses", complete: hasAddresses },
-    { id: "kyc", label: "KYC", complete: isKycComplete },
   ];
 
   const completedCount = completionSteps.filter(s => s.complete).length;
@@ -137,7 +133,7 @@ export default function Profile() {
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ProfileTab)}>
-          <TabsList className="w-full h-auto p-1 grid grid-cols-4 gap-1 bg-secondary rounded-xl">
+          <TabsList className="w-full h-auto p-1 grid grid-cols-3 gap-1 bg-secondary rounded-xl">
             <TabsTrigger
               value="personal"
               className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
@@ -159,19 +155,13 @@ export default function Profile() {
               <MapPin className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Addresses</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="kyc"
-              className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
-            >
-              <FileCheck2 className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">KYC</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal" className="mt-4">
             <PersonalProfileSection
               profile={personalProfile}
               onSave={savePersonalProfile}
+              onUploadPicture={uploadPicture}
             />
           </TabsContent>
 
@@ -188,13 +178,6 @@ export default function Profile() {
               onAdd={addAddress}
               onUpdate={updateAddress}
               onDelete={deleteAddress}
-            />
-          </TabsContent>
-
-          <TabsContent value="kyc" className="mt-4">
-            <KYCDetailsSection
-              kycDetails={kycDetails}
-              onSave={saveKycDetails}
             />
           </TabsContent>
         </Tabs>
