@@ -5,16 +5,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Plus, Trash2, Check, Star, X, Building2, Warehouse, MoreHorizontal } from "lucide-react";
+import { MapPin, Plus, Trash2, Check, Star, X, Building2, Warehouse, MoreHorizontal, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Address } from "@/hooks/useProfileData";
 import { cn } from "@/lib/utils";
 
 interface AddressManagementSectionProps {
   addresses: Address[];
-  onAdd: (address: Omit<Address, "id">) => Address;
-  onUpdate: (id: string, updates: Partial<Address>) => void;
-  onDelete: (id: string) => void;
+  onAdd: (address: Omit<Address, "id">) => Promise<Address | null>;
+  onUpdate: (id: string, updates: Partial<Address>) => Promise<boolean>;
+  onDelete: (id: string) => Promise<boolean>;
 }
 
 const ADDRESS_TYPE_ICONS = {
@@ -84,32 +84,47 @@ export function AddressManagementSection({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAdd = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleAdd = async () => {
     if (!validate()) return;
 
-    onAdd(formData);
-    setFormData({
-      type: "business",
-      addressLine1: "",
-      addressLine2: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "India",
-      isDefault: false,
-    });
-    setIsAdding(false);
-    toast.success("Address added successfully");
+    setSaving(true);
+    const result = await onAdd(formData);
+    setSaving(false);
+
+    if (result) {
+      setFormData({
+        type: "business",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        pincode: "",
+        country: "India",
+        isDefault: false,
+      });
+      setIsAdding(false);
+      toast.success("Address added successfully");
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    onUpdate(id, { isDefault: true });
-    toast.success("Default address updated");
+  const handleSetDefault = async (id: string) => {
+    setSaving(true);
+    const success = await onUpdate(id, { isDefault: true });
+    setSaving(false);
+    if (success) {
+      toast.success("Default address updated");
+    }
   };
 
-  const handleDeleteAddress = (id: string) => {
-    onDelete(id);
-    toast.success("Address deleted");
+  const handleDeleteAddress = async (id: string) => {
+    setSaving(true);
+    const success = await onDelete(id);
+    setSaving(false);
+    if (success) {
+      toast.success("Address deleted");
+    }
   };
 
   const defaultAddress = addresses.find(a => a.isDefault);
@@ -270,9 +285,13 @@ export function AddressManagementSection({
               </div>
             </div>
 
-            <Button onClick={handleAdd} className="w-full">
-              <Check className="w-4 h-4 mr-2" />
-              Add Address
+            <Button onClick={handleAdd} disabled={saving} className="w-full">
+              {saving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              {saving ? "Adding..." : "Add Address"}
             </Button>
           </div>
         ) : (
