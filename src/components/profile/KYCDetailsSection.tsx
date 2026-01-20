@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FileCheck2, Upload, Check, X, FileText, Info } from "lucide-react";
+import { FileCheck2, Upload, Check, X, FileText, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { KYCDetails } from "@/hooks/useProfileData";
 import { cn } from "@/lib/utils";
 
 interface KYCDetailsSectionProps {
   kycDetails: KYCDetails;
-  onSave: (kyc: KYCDetails) => void;
+  onSave: (kyc: KYCDetails) => Promise<boolean>;
 }
 
 export function KYCDetailsSection({ kycDetails, onSave }: KYCDetailsSectionProps) {
@@ -111,12 +111,19 @@ export function KYCDetailsSection({ kycDetails, onSave }: KYCDetailsSectionProps
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
     if (!validate()) return;
 
-    onSave(formData);
-    setIsDirty(false);
-    toast.success("KYC details saved successfully");
+    setSaving(true);
+    const success = await onSave(formData);
+    setSaving(false);
+
+    if (success) {
+      setIsDirty(false);
+      toast.success("KYC details saved successfully");
+    }
   };
 
   const getFileName = (dataUrl: string | null): string => {
@@ -259,12 +266,16 @@ export function KYCDetailsSection({ kycDetails, onSave }: KYCDetailsSectionProps
         {/* Save Button */}
         <Button
           onClick={handleSave}
-          disabled={!isDirty}
+          disabled={!isDirty || saving}
           className="w-full"
           variant="secondary"
         >
-          <Check className="w-4 h-4 mr-2" />
-          Save KYC Details
+          {saving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4 mr-2" />
+          )}
+          {saving ? "Saving..." : "Save KYC Details"}
         </Button>
       </CardContent>
     </Card>

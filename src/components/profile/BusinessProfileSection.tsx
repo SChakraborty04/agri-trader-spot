@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Building2, Check, Plus, Pencil } from "lucide-react";
+import { Building2, Check, Plus, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BusinessProfile } from "@/hooks/useProfileData";
 import { cn } from "@/lib/utils";
 
 interface BusinessProfileSectionProps {
   profile: BusinessProfile | null;
-  onSave: (profile: BusinessProfile) => void;
+  onSave: (profile: BusinessProfile) => Promise<boolean>;
 }
 
 export function BusinessProfileSection({ profile, onSave }: BusinessProfileSectionProps) {
@@ -54,12 +54,19 @@ export function BusinessProfileSection({ profile, onSave }: BusinessProfileSecti
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
     if (!validate()) return;
 
-    onSave(formData);
-    setIsEditing(false);
-    toast.success("Business profile saved successfully");
+    setSaving(true);
+    const success = await onSave(formData);
+    setSaving(false);
+
+    if (success) {
+      setIsEditing(false);
+      toast.success("Business profile saved successfully");
+    }
   };
 
   const handleCancel = () => {
@@ -221,9 +228,13 @@ export function BusinessProfileSection({ profile, onSave }: BusinessProfileSecti
               Cancel
             </Button>
           )}
-          <Button onClick={handleSave} className="flex-1">
-            <Check className="w-4 h-4 mr-2" />
-            {profile ? "Update" : "Create"} Business Profile
+          <Button onClick={handleSave} disabled={saving} className="flex-1">
+            {saving ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4 mr-2" />
+            )}
+            {saving ? "Saving..." : profile ? "Update" : "Create"} {!saving && "Business Profile"}
           </Button>
         </div>
       </CardContent>

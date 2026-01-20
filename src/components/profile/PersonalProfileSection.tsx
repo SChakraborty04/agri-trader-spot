@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { User, Camera, CalendarIcon, Check } from "lucide-react";
+import { User, Camera, CalendarIcon, Check, Loader2 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { toast } from "sonner";
 import { PersonalProfile } from "@/hooks/useProfileData";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 interface PersonalProfileSectionProps {
   profile: PersonalProfile;
-  onSave: (profile: PersonalProfile) => void;
+  onSave: (profile: PersonalProfile) => Promise<boolean>;
 }
 
 export function PersonalProfileSection({ profile, onSave }: PersonalProfileSectionProps) {
@@ -85,12 +85,19 @@ export function PersonalProfileSection({ profile, onSave }: PersonalProfileSecti
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
     if (!validate()) return;
 
-    onSave(formData);
-    setIsDirty(false);
-    toast.success("Personal profile saved successfully");
+    setSaving(true);
+    const success = await onSave(formData);
+    setSaving(false);
+
+    if (success) {
+      setIsDirty(false);
+      toast.success("Personal profile saved successfully");
+    }
   };
 
   const getInitials = () => {
@@ -254,11 +261,15 @@ export function PersonalProfileSection({ profile, onSave }: PersonalProfileSecti
         {/* Save Button */}
         <Button
           onClick={handleSave}
-          disabled={!isDirty}
+          disabled={!isDirty || saving}
           className="w-full"
         >
-          <Check className="w-4 h-4 mr-2" />
-          Save Personal Profile
+          {saving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4 mr-2" />
+          )}
+          {saving ? "Saving..." : "Save Personal Profile"}
         </Button>
       </CardContent>
     </Card>
