@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, MapPin, Calendar, Clock, RefreshCw, User, Building2, CreditCard, FileText, ShoppingCart, Loader2 } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Calendar, Clock, RefreshCw, Building2, CreditCard, FileText, ShoppingCart, Loader2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,15 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 import { AuthWidget } from "@/components/AuthWidget";
 import { MobileDock } from "@/components/MobileDock";
 import { ApiDebugDrawer } from "@/components/ApiDebugDrawer";
-import { fetchQuotations, QuotationResponse, getAuthToken, createOrder } from "@/lib/api";
+import { QuotationResponseForm } from "@/components/QuotationResponseForm";
+import { 
+  fetchQuotations, 
+  fetchQuotationConversation,
+  QuotationResponse, 
+  QuotationResponseItem,
+  getAuthToken, 
+  createOrder 
+} from "@/lib/api";
 import { toast } from "sonner";
 
 const getStatusColor = (status: QuotationResponse["status"]) => {
@@ -37,75 +45,24 @@ const formatStatus = (status: string) => {
   return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-// Mock conversation messages (since API doesn't have messages endpoint yet)
-interface ConversationMessage {
-  id: string;
-  sender: "buyer" | "seller" | "system";
-  senderName: string;
-  message: string;
-  timestamp: string;
-}
-
-const generateMockConversation = (quote: QuotationResponse): ConversationMessage[] => {
-  const messages: ConversationMessage[] = [
-    {
-      id: "1",
-      sender: "system",
-      senderName: "System",
-      message: `Quote request created for ${quote.quantity} ${quote.unit_of_measure} of ${quote.commodity_name} (${quote.variety_name}) at ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}.`,
-      timestamp: quote.created_at,
-    },
-  ];
-
-  if (quote.notes) {
-    messages.push({
-      id: "2",
-      sender: "buyer",
-      senderName: "You",
-      message: quote.notes,
-      timestamp: quote.created_at,
-    });
+const getResponseTypeColor = (type: string) => {
+  switch (type) {
+    case "accept":
+      return "bg-green-500/10 text-green-600 border-green-500/20";
+    case "reject":
+      return "bg-red-500/10 text-red-600 border-red-500/20";
+    case "counter":
+    default:
+      return "bg-blue-500/10 text-blue-600 border-blue-500/20";
   }
-
-  if (quote.status === "negotiating") {
-    messages.push({
-      id: "3",
-      sender: "seller",
-      senderName: quote.seller_name,
-      message: `Thank you for your interest. We're reviewing your offer of ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}. We'll get back to you shortly with our response.`,
-      timestamp: new Date(new Date(quote.created_at).getTime() + 3600000).toISOString(),
-    });
-  }
-
-  if (quote.status === "accepted") {
-    messages.push({
-      id: "3",
-      sender: "seller",
-      senderName: quote.seller_name,
-      message: `Great news! We've accepted your quotation for ${quote.quantity} ${quote.unit_of_measure} at ${quote.currency} ${quote.offer_price}/${quote.unit_of_measure}. Please proceed with the order.`,
-      timestamp: new Date(new Date(quote.created_at).getTime() + 7200000).toISOString(),
-    });
-  }
-
-  if (quote.status === "rejected") {
-    messages.push({
-      id: "3",
-      sender: "seller",
-      senderName: quote.seller_name,
-      message: `We regret to inform you that we cannot accept your offer at this time. Please feel free to submit a new quotation.`,
-      timestamp: new Date(new Date(quote.created_at).getTime() + 7200000).toISOString(),
-    });
-  }
-
-  return messages;
 };
 
 const QuoteDetail = () => {
   const { quoteNo } = useParams();
   const navigate = useNavigate();
   const [quote, setQuote] = useState<QuotationResponse | null>(null);
+  const [responses, setResponses] = useState<QuotationResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [creatingOrder, setCreatingOrder] = useState(false);
 
   const loadQuote = async () => {
@@ -117,14 +74,24 @@ const QuoteDetail = () => {
 
     try {
       setLoading(true);
-      const response = await fetchQuotations(100, 0);
-      const foundQuote = response.quotations.find(
+      // First find the quotation to get its ID
+      const quotationsResponse = await fetchQuotations(100, 0);
+      const foundQuote = quotationsResponse.quotations.find(
         (q) => q.quotation_number === quoteNo
       );
       
       if (foundQuote) {
-        setQuote(foundQuote);
-        setMessages(generateMockConversation(foundQuote));
+        // Now fetch the conversation for this quotation
+        try {
+          const conversation = await fetchQuotationConversation(parseInt(foundQuote.id));
+          setQuote(conversation.quotation);
+          setResponses(conversation.responses || []);
+        } catch (convError) {
+          // If conversation fetch fails, just use the quote data
+          console.warn("Could not fetch conversation, using quote data:", convError);
+          setQuote(foundQuote);
+          setResponses([]);
+        }
       }
     } catch (err: any) {
       toast.error(err?.message || "Failed to load quote details");
@@ -454,58 +421,91 @@ const QuoteDetail = () => {
         <Card className="rounded-2xl">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">Conversation History</h3>
+              <MessageSquare className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Negotiation History</h3>
+              {responses.length > 0 && (
+                <Badge variant="secondary" className="ml-auto">
+                  {responses.length} response{responses.length > 1 ? "s" : ""}
+                </Badge>
+              )}
             </div>
             <Separator className="mb-4" />
             
-            {messages.length === 0 ? (
+            {responses.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No conversation history yet</p>
+                <MessageSquare className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">No responses yet</p>
+                <p className="text-sm text-muted-foreground/70">
+                  Start the negotiation by sending a counter-offer below
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((msg) => (
+                {responses.map((response) => (
                   <div
-                    key={msg.id}
-                    className={`flex gap-3 ${
-                      msg.sender === "buyer" ? "justify-end" : "justify-start"
-                    }`}
+                    key={response.response_id}
+                    className="flex gap-3"
                   >
-                    {msg.sender !== "buyer" && (
-                      <Avatar className="w-9 h-9 shrink-0">
-                        <AvatarFallback 
-                          className={
-                            msg.sender === "system" 
-                              ? "bg-muted text-muted-foreground text-xs" 
-                              : "bg-primary/10 text-primary text-xs"
-                          }
+                    <Avatar className="w-9 h-9 shrink-0">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {response.responder_name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-medium text-sm">
+                          {response.responder_name}
+                        </span>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${getResponseTypeColor(response.response_type)}`}
                         >
-                          {msg.sender === "system" ? "SYS" : msg.senderName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={`flex flex-col max-w-[75%] ${
-                        msg.sender === "buyer" ? "items-end" : "items-start"
-                      }`}
-                    >
-                      <div
-                        className={`rounded-2xl px-4 py-3 ${
-                          msg.sender === "buyer"
-                            ? "bg-primary text-primary-foreground"
-                            : msg.sender === "system"
-                            ? "bg-muted/50 border border-border"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <p className="text-xs font-medium mb-1 opacity-80">
-                          {msg.senderName}
-                        </p>
-                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                          {response.response_type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          #{response.response_number}
+                        </span>
                       </div>
+                      
+                      <div className="bg-muted/50 rounded-xl p-3 space-y-2">
+                        {/* Counter details */}
+                        {response.counter_price && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">Counter Price:</span>{" "}
+                            <span className="font-medium">{quote.currency} {response.counter_price}</span>
+                          </p>
+                        )}
+                        {response.counter_quantity && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">Counter Quantity:</span>{" "}
+                            <span className="font-medium">{response.counter_quantity} {quote.unit_of_measure}</span>
+                          </p>
+                        )}
+                        {response.counter_delivery_date && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">Counter Delivery:</span>{" "}
+                            <span className="font-medium">{new Date(response.counter_delivery_date).toLocaleDateString()}</span>
+                          </p>
+                        )}
+                        {response.counter_delivery_location && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">Location:</span>{" "}
+                            <span className="font-medium">{response.counter_delivery_location}</span>
+                          </p>
+                        )}
+                        {response.counter_payment_terms && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">Payment Terms:</span>{" "}
+                            <span className="font-medium">{response.counter_payment_terms}</span>
+                          </p>
+                        )}
+                        {response.comments && (
+                          <p className="text-sm whitespace-pre-wrap">{response.comments}</p>
+                        )}
+                      </div>
+                      
                       <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(msg.timestamp).toLocaleString([], {
+                        {new Date(response.response_date).toLocaleString([], {
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
@@ -513,26 +513,18 @@ const QuoteDetail = () => {
                         })}
                       </p>
                     </div>
-                    {msg.sender === "buyer" && (
-                      <Avatar className="w-9 h-9 shrink-0">
-                        <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                          You
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
                   </div>
                 ))}
               </div>
             )}
-
-            {/* Read-only notice */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center">
-                📧 Conversation history is read-only. Messages are managed through the seller portal.
-              </p>
-            </div>
           </CardContent>
         </Card>
+
+        {/* Response Form */}
+        <QuotationResponseForm 
+          quotation={quote} 
+          onResponseSent={loadQuote} 
+        />
       </main>
 
       <ApiDebugDrawer />

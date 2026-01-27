@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { User, Camera, CalendarIcon, Check, Loader2 } from "lucide-react";
+import { User, CalendarIcon, Check, Loader2 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { toast } from "sonner";
 import { PersonalProfile } from "@/hooks/useProfileData";
@@ -16,15 +16,12 @@ import { cn } from "@/lib/utils";
 interface PersonalProfileSectionProps {
   profile: PersonalProfile;
   onSave: (profile: PersonalProfile) => Promise<boolean>;
-  onUploadPicture?: (file: File) => Promise<string | null>;
 }
 
-export function PersonalProfileSection({ profile, onSave, onUploadPicture }: PersonalProfileSectionProps) {
+export function PersonalProfileSection({ profile, onSave }: PersonalProfileSectionProps) {
   const [formData, setFormData] = useState<PersonalProfile>(profile);
   const [errors, setErrors] = useState<Partial<Record<keyof PersonalProfile, string>>>({});
   const [isDirty, setIsDirty] = useState(false);
-  const [uploadingPicture, setUploadingPicture] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFormData(profile);
@@ -47,42 +44,6 @@ export function PersonalProfileSection({ profile, onSave, onUploadPicture }: Per
     // Clear error on change
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
-    }
-
-    // If we have an upload function, use it to upload to server
-    if (onUploadPicture) {
-      setUploadingPicture(true);
-      const imageUrl = await onUploadPicture(file);
-      setUploadingPicture(false);
-      
-      if (imageUrl) {
-        setFormData(prev => ({ ...prev, profilePicture: imageUrl }));
-        toast.success("Profile picture uploaded successfully");
-      }
-    } else {
-      // Fallback to local preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setFormData(prev => ({ ...prev, profilePicture: result }));
-        setIsDirty(true);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -135,41 +96,16 @@ export function PersonalProfileSection({ profile, onSave, onUploadPicture }: Per
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Profile Picture */}
+        {/* Profile Avatar (display only - no upload) */}
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="w-20 h-20">
-              {formData.profilePicture ? (
-                <AvatarImage src={formData.profilePicture} alt="Profile" />
-              ) : (
-                <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                  {getInitials()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingPicture}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {uploadingPicture ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Camera className="w-4 h-4" />
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
+          <Avatar className="w-20 h-20">
+            <AvatarFallback className="text-lg bg-primary/10 text-primary">
+              {getInitials()}
+            </AvatarFallback>
+          </Avatar>
           <div className="text-sm text-muted-foreground">
-            <p>Upload your profile picture</p>
-            <p className="text-xs">JPG, PNG up to 5MB</p>
+            <p className="font-medium text-foreground">{formData.displayName || "Your Name"}</p>
+            <p className="text-xs">Profile avatar based on your initials</p>
           </div>
         </div>
 

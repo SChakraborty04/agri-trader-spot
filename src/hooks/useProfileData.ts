@@ -2,13 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { 
   getAuthToken,
   fetchFullProfile,
-  fetchProfileDetails,
   updatePersonalProfile,
-  fetchBuyerProfile,
   createBuyerProfile,
-  fetchAddresses,
   createAddress,
-  uploadProfilePicture,
   PersonalProfileAPI,
   PersonalProfileResponse,
   BusinessProfileAPI,
@@ -24,7 +20,6 @@ export interface PersonalProfile {
   displayName: string;
   dateOfBirth: string;
   gender: "male" | "female" | "";
-  profilePicture: string | null;
   status?: number;
   buyerId?: number | null;
 }
@@ -59,7 +54,6 @@ function apiToPersonal(data: PersonalProfileResponse | null): PersonalProfile {
       displayName: "",
       dateOfBirth: "",
       gender: "",
-      profilePicture: null,
       status: 0,
       buyerId: null,
     };
@@ -76,7 +70,6 @@ function apiToPersonal(data: PersonalProfileResponse | null): PersonalProfile {
     displayName: data.display_name || "",
     dateOfBirth: data.date_of_birth || "",
     gender: genderStr,
-    profilePicture: data.profile_picture || null,
     status: data.status,
     buyerId: data.buyer_id,
   };
@@ -162,7 +155,6 @@ export function useProfileData() {
     displayName: "",
     dateOfBirth: "",
     gender: "",
-    profilePicture: null,
     status: 0,
     buyerId: null,
   });
@@ -210,24 +202,6 @@ export function useProfileData() {
       console.error("Error saving personal profile:", error);
       toast.error(error instanceof Error ? error.message : "Failed to save profile");
       return false;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const uploadPicture = async (file: File): Promise<string | null> => {
-    setSaving(true);
-    try {
-      const result = await uploadProfilePicture(file);
-      setPersonalProfile(prev => ({
-        ...prev,
-        profilePicture: result.profile_image_url,
-      }));
-      return result.profile_image_url;
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to upload picture");
-      return null;
     } finally {
       setSaving(false);
     }
@@ -294,7 +268,6 @@ export function useProfileData() {
     loading,
     saving,
     savePersonalProfile,
-    uploadPicture,
     saveBusinessProfile,
     addAddress,
     updateAddress,

@@ -549,7 +549,6 @@ export interface PersonalProfileAPI {
 
 export interface PersonalProfileResponse extends PersonalProfileAPI {
   display_name?: string;
-  profile_picture?: string | null;
   status?: number;
   buyer_id?: number | null;
 }
@@ -590,6 +589,85 @@ export interface FullProfileResponse {
   addresses: AddressResponse[];
 }
 
+// ============= Quotation Conversation API =============
+
+export interface QuotationResponseRequest {
+  response_type: "counter" | "accept" | "reject";
+  counter_price?: number;
+  counter_quantity?: number;
+  counter_delivery_date?: string;
+  counter_delivery_location?: string;
+  counter_payment_terms?: string;
+  comments?: string;
+  is_final_response?: boolean;
+}
+
+export interface QuotationResponseItem {
+  response_id: number;
+  quotation_id: number;
+  responded_by: number;
+  responder_name: string;
+  response_number: number;
+  response_date: string;
+  counter_price: number | null;
+  counter_quantity: number | null;
+  counter_delivery_date: string | null;
+  counter_delivery_location: string | null;
+  counter_payment_terms: string | null;
+  response_type: "counter" | "accept" | "reject";
+  comments: string | null;
+  is_final_response: boolean;
+  created_at: string;
+}
+
+export interface QuotationConversation {
+  quotation: QuotationResponse;
+  responses: QuotationResponseItem[];
+}
+
+// Create a response to a quotation (counter-offer, accept, or reject)
+export async function createQuotationResponse(
+  quotationId: number,
+  data: QuotationResponseRequest
+): Promise<QuotationResponseItem> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to respond to quotation");
+
+  const res = await fetchWithFallback(`/vboxtrade/quotations/${quotationId}/responses`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to send response" }));
+    throw new Error(error.detail || "Failed to send response");
+  }
+
+  return res.json();
+}
+
+// Fetch quotation conversation (quotation details + all responses)
+export async function fetchQuotationConversation(quotationId: number): Promise<QuotationConversation> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Please login to view conversation");
+
+  const res = await fetchWithFallback(`/vboxtrade/quotations/${quotationId}/conversation`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to fetch conversation" }));
+    throw new Error(error.detail || "Failed to fetch conversation");
+  }
+
+  return res.json();
+}
+
 // Fetch profile details
 export async function fetchProfileDetails(): Promise<PersonalProfileResponse> {
   const token = getAuthToken();
@@ -608,7 +686,6 @@ export async function fetchProfileDetails(): Promise<PersonalProfileResponse> {
         date_of_birth: null,
         gender: null,
         display_name: "",
-        profile_picture: null,
         status: 0,
         buyer_id: null,
       };
@@ -641,29 +718,6 @@ export async function updatePersonalProfile(data: PersonalProfileAPI): Promise<P
 
   return res.json();
 }
-
-// Upload profile picture
-export async function uploadProfilePicture(file: File): Promise<{ profile_image_url: string }> {
-  const token = getAuthToken();
-  if (!token) throw new Error("Please login to upload picture");
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetchWithFallback(`/vboxtrade/profile/upload-picture`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Failed to upload picture" }));
-    throw new Error(error.detail || "Failed to upload picture");
-  }
-
-  return res.json();
-}
-
 // Get buyer profile
 export async function fetchBuyerProfile(): Promise<BusinessProfileResponse | null> {
   const token = getAuthToken();

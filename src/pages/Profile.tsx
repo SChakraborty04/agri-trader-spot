@@ -26,7 +26,6 @@ export default function Profile() {
     addresses,
     loading: dataLoading,
     savePersonalProfile,
-    uploadPicture,
     saveBusinessProfile,
     addAddress,
     updateAddress,
@@ -161,7 +160,6 @@ export default function Profile() {
             <PersonalProfileSection
               profile={personalProfile}
               onSave={savePersonalProfile}
-              onUploadPicture={uploadPicture}
             />
           </TabsContent>
 
