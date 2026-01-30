@@ -592,14 +592,7 @@ export interface FullProfileResponse {
 // ============= Quotation Conversation API =============
 
 export interface QuotationResponseRequest {
-  response_type: "counter" | "accept" | "reject";
-  counter_price?: number;
-  counter_quantity?: number;
-  counter_delivery_date?: string;
-  counter_delivery_location?: string;
-  counter_payment_terms?: string;
-  comments?: string;
-  is_final_response?: boolean;
+  comments: string;
 }
 
 export interface QuotationResponseItem {
