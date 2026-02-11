@@ -102,7 +102,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, hsl(22 100% 50% / 0.08) 0%, hsl(22 100% 50% / 0.03) 30%, hsl(var(--background)) 60%)' }}>
       {/* Header - light orange brand bar */}
       <header className="sticky top-0 z-50 bg-primary/10 border-b border-primary/10 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-3">
