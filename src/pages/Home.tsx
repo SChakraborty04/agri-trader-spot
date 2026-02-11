@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { AuthWidget } from "@/components/AuthWidget";
+import { Footer } from "@/components/Footer";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
 import { MobileDock } from "@/components/MobileDock";
@@ -101,10 +102,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header - Apple vibrancy style */}
-      <header className="sticky top-0 z-50 vibrancy border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header - light orange brand bar */}
+      <header className="sticky top-0 z-50 bg-primary/10 border-b border-primary/10 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <NavigationMenu />
             <div className="flex items-center gap-2">
@@ -348,6 +349,8 @@ const Home = () => {
           </div>
         </section>
       </main>
+
+      <Footer />
 
       {/* Mobile Dock */}
       <MobileDock />
