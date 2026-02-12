@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { AuthWidget } from "@/components/AuthWidget";
+import { Footer } from "@/components/Footer";
 import { MarketChip } from "@/components/MarketChip";
 import { PriceTicker } from "@/components/PriceTicker";
 import { MobileDock } from "@/components/MobileDock";
@@ -14,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight, MapPin, FileText, Search, ArrowUpDown } from "lucide-react";
 import { PriceAlertManager } from "@/components/PriceAlertManager";
 import { useQuery } from "@tanstack/react-query";
+import logoImg from "@/assets/logo.png";
 import { fetchAllFPOOffers, FPOOfferAPI, getAuthToken } from "@/lib/api";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
 import { useQuoteNotifications } from "@/hooks/useQuoteNotifications";
@@ -100,15 +102,18 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header - Apple vibrancy style */}
-      <header className="sticky top-0 z-50 vibrancy border-b border-border/50">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, hsl(22 100% 50% / 0.08) 0%, hsl(22 100% 50% / 0.03) 30%, hsl(var(--background)) 60%)' }}>
+      {/* Header - light orange brand bar */}
+      <header className="sticky top-0 z-50 bg-primary/10 border-b border-primary/10 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <NavigationMenu />
-            <h1 className="text-xl font-semibold text-foreground tracking-tight">
-              VBOX Trading
-            </h1>
+            <div className="flex items-center gap-2">
+              <img src={logoImg} alt="BoxFarming" className="w-8 h-8 rounded-lg" />
+              <h1 className="text-lg font-bold tracking-tight">
+                <span className="text-primary">vbox</span><span className="text-foreground">trade</span>
+              </h1>
+            </div>
             <div className="flex items-center gap-2">
               <PriceAlertManager />
               <AuthWidget />
@@ -297,7 +302,7 @@ const Home = () => {
                           </div>
                         </div>
                       </div>
-                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px] font-medium rounded-md">
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-[10px] font-medium rounded-md">
                         {offer.fpoType}
                       </Badge>
                     </div>
@@ -314,7 +319,7 @@ const Home = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Grade</span>
-                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-[10px] font-medium rounded-md">
+                        <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-[10px] font-medium rounded-md">
                           {offer.grade}
                         </Badge>
                       </div>
@@ -344,6 +349,8 @@ const Home = () => {
           </div>
         </section>
       </main>
+
+      <Footer />
 
       {/* Mobile Dock */}
       <MobileDock />

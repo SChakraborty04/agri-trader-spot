@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "./ThemeToggle";
+import logo from "@/assets/logo.png";
 
 const menuItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -27,7 +27,7 @@ export const NavigationMenu = () => {
   const location = useLocation();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <Sheet>
         <SheetTrigger asChild>
           <Button 
@@ -40,7 +40,10 @@ export const NavigationMenu = () => {
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] p-0 border-r border-border/50">
           <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/50">
-            <SheetTitle className="text-xl font-semibold">Menu</SheetTitle>
+            <SheetTitle className="flex items-center gap-3">
+              <img src={logo} alt="BoxFarming" className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-semibold">BoxFarming</span>
+            </SheetTitle>
           </SheetHeader>
           <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
@@ -69,7 +72,6 @@ export const NavigationMenu = () => {
           </nav>
         </SheetContent>
       </Sheet>
-      <ThemeToggle />
     </div>
   );
 };

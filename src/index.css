@@ -2,124 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple/macOS Design System - Clean, minimal, with glassmorphism */
+/* White Liquid Design System - BoxFarming Orange */
 
 @layer base {
   :root {
-    /* Apple-inspired light theme */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 9%;
+    --background: 30 20% 99%;
+    --foreground: 20 10% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 20 10% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 20 10% 12%;
 
-    /* Apple Blue */
-    --primary: 211 100% 50%;
+    /* BoxFarming Orange */
+    --primary: 22 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 30 20% 96%;
+    --secondary-foreground: 20 10% 12%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 30 10% 95%;
+    --muted-foreground: 20 5% 45%;
 
-    --accent: 211 100% 50%;
+    --accent: 22 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    /* Apple Red */
-    --destructive: 0 84% 60%;
+    /* Red for destructive */
+    --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Apple Green */
-    --success: 142 71% 45%;
+    /* Green for success */
+    --success: 142 71% 42%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 211 100% 50%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 22 100% 50%;
 
     --radius: 1rem;
-    
-    /* Trading colors - Apple style */
-    --gain: 142 71% 45%;
-    --gain-light: 142 71% 95%;
-    --loss: 0 84% 60%;
-    --loss-light: 0 84% 96%;
-    
-    /* Apple-style glass effect */
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 0 0% 100% / 0.3;
-    --glass-blur: 20px;
-    
-    /* Apple-style shadows */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.04);
-    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 211 100% 50%;
+    /* Trading colors */
+    --gain: 142 71% 42%;
+    --gain-light: 142 50% 95%;
+    --loss: 0 84% 55%;
+    --loss-light: 0 60% 96%;
+
+    /* Liquid glass effect */
+    --glass-bg: 0 0% 100% / 0.75;
+    --glass-border: 30 20% 92% / 0.6;
+    --glass-blur: 24px;
+
+    /* Soft liquid shadows */
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.03);
+    --shadow-xl: 0 20px 56px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.03);
+
+    --sidebar-background: 30 20% 99%;
+    --sidebar-foreground: 20 10% 20%;
+    --sidebar-primary: 22 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 94%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 211 100% 50%;
-  }
-
-  .dark {
-    /* Apple-inspired dark theme */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 211 100% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 211 100% 60%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 211 100% 60%;
-    
-    --gain: 142 71% 50%;
-    --gain-light: 142 71% 15%;
-    --loss: 0 84% 60%;
-    --loss-light: 0 84% 15%;
-    
-    --glass-bg: 0 0% 10% / 0.8;
-    --glass-border: 0 0% 100% / 0.1;
-    
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 211 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 211 100% 60%;
+    --sidebar-accent: 30 20% 94%;
+    --sidebar-accent-foreground: 20 10% 12%;
+    --sidebar-border: 30 15% 90%;
+    --sidebar-ring: 22 100% 50%;
   }
 }
 
@@ -136,22 +84,11 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Smooth theme transition for all elements */
-  *,
-  *::before,
-  *::after {
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
 @layer components {
-  /* Glass morphism card */
+  /* Liquid glass card */
   .glass {
     background: hsl(var(--glass-bg));
     backdrop-filter: blur(var(--glass-blur));
@@ -159,27 +96,27 @@
     border: 1px solid hsl(var(--glass-border));
   }
 
-  /* Apple-style button hover */
+  /* Hover effect */
   .apple-hover {
     @apply transition-all duration-200 ease-out;
   }
-  
+
   .apple-hover:hover {
     @apply scale-[1.02];
   }
-  
+
   .apple-hover:active {
     @apply scale-[0.98];
   }
 
-  /* Subtle press effect */
+  /* Press effect */
   .press-effect {
     @apply transition-transform duration-150 ease-out active:scale-[0.97];
   }
 
-  /* Apple-style card */
+  /* Liquid card */
   .apple-card {
-    @apply bg-card rounded-2xl border border-border/50;
+    @apply bg-card rounded-2xl border border-border/40;
     box-shadow: var(--shadow-sm);
     transition: box-shadow 0.3s ease, transform 0.2s ease;
   }
@@ -189,7 +126,7 @@
     @apply -translate-y-0.5;
   }
 
-  /* Vibrancy effect for headers */
+  /* Vibrancy header */
   .vibrancy {
     background: hsl(var(--glass-bg));
     backdrop-filter: saturate(180%) blur(var(--glass-blur));
@@ -198,7 +135,6 @@
 }
 
 @layer utilities {
-  /* Animation utilities */
   .animate-in {
     animation: animate-in 0.3s ease-out;
   }
@@ -223,22 +159,19 @@
     to { opacity: 1; }
   }
 
-  /* Smooth scroll */
   .scroll-smooth {
     scroll-behavior: smooth;
   }
 
-  /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 
-  /* Safe area for mobile dock */
   .pb-safe {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
@@ -247,7 +180,6 @@
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Dock item bounce effect */
   .dock-item-active {
     animation: dock-bounce 0.3s ease-out;
   }

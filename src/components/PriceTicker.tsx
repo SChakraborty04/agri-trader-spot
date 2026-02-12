@@ -21,7 +21,7 @@ export const PriceTicker = () => {
   }
 
   return (
-    <div className="relative w-full overflow-hidden vibrancy border-b border-border/50 py-2.5">
+    <div className="relative w-full overflow-hidden bg-primary/10 border-b border-primary/10 backdrop-blur-xl py-2.5">
       <div
         className="flex gap-8 whitespace-nowrap"
         style={{
